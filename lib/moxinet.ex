@@ -25,4 +25,13 @@ defmodule Moxinet do
     |> :erlang.term_to_binary()
     |> Base.encode64()
   end
+
+  @doc """
+  Mocks a call for the passed module when used from a certain pid, defaulting `self()`
+  """
+  @type http_method :: :get | :post | :patch | :put | :delete | :options
+  @spec expect(module(), http_method, function(), pid) :: :ok
+  defdelegate expect(module, http_method, callback, from_pid \\ self()),
+    to: Moxinet.SignatureStorage,
+    as: :store
 end

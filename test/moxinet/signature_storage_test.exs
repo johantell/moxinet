@@ -3,7 +3,7 @@ defmodule Moxinet.SignatureStorageTest do
 
   alias Moxinet.SignatureStorage
 
-  describe "store/1" do
+  describe "store/5" do
     test "stores a signature in the storage" do
       {:ok, storage_pid} = SignatureStorage.start_link([])
       method = :post
