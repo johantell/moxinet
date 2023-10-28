@@ -17,7 +17,7 @@ defmodule Moxinet.SignatureStorageTest do
                %SignatureStorage.Signature{
                  mock_module: __MODULE__,
                  pid: ^pid_reference,
-                 method: ^method
+                 method: "POST"
                } => ^callback
              } = :sys.get_state(storage_pid)
     end

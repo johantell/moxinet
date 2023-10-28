@@ -21,7 +21,7 @@ defmodule Moxinet.SignatureStorage do
     signature = %Signature{
       mock_module: scope,
       pid: pid_reference(from_pid),
-      method: method
+      method: method |> to_string() |> String.upcase()
     }
 
     GenServer.call(pid, {:store, signature, callback})
@@ -31,7 +31,7 @@ defmodule Moxinet.SignatureStorage do
     signature = %Signature{
       mock_module: scope,
       pid: pid_reference(from_pid),
-      method: method
+      method: method |> to_string() |> String.upcase()
     }
 
     GenServer.call(pid, {:find_signature, signature})
