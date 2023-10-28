@@ -1,18 +1,21 @@
 defmodule Moxinet do
   @moduledoc """
-  Documentation for `Moxinet`.
+  Moxinet helps you mock the internet at the HTTP layer
+  without sacrificing parallel testing.
   """
 
   @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Moxinet.hello()
-      :world
-
+  Returns the header needed to be included in requests to the
+  mock servers in order to support parallel runs.
   """
-  def hello do
-    :world
+  @spec build_mock_header(pid()) :: {String.t(), String.t()}
+  def build_mock_header(pid \\ self()) when is_pid(pid) do
+    {"x-moxinet-ref", pid_reference(pid)}
+  end
+
+  defp pid_reference(pid) when is_pid(pid) do
+    pid
+    |> :erlang.term_to_binary()
+    |> Base.encode64()
   end
 end
