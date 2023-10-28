@@ -4,6 +4,8 @@ defmodule Moxinet do
   without sacrificing parallel testing.
   """
 
+  defdelegate start(opts), to: Moxinet.Application
+
   @doc """
   Returns the header needed to be included in requests to the
   mock servers in order to support parallel runs.
