@@ -15,7 +15,12 @@ defmodule Moxinet do
     {"x-moxinet-ref", pid_reference(pid)}
   end
 
-  defp pid_reference(pid) when is_pid(pid) do
+  @doc """
+  Turns a pid into a reference which could be used for indexing
+  the signatures.
+  """
+  @spec pid_reference(pid()) :: String.t()
+  def pid_reference(pid) when is_pid(pid) do
     pid
     |> :erlang.term_to_binary()
     |> Base.encode64()

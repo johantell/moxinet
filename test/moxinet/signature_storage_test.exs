@@ -9,13 +9,14 @@ defmodule Moxinet.SignatureStorageTest do
       method = :post
       test_pid = self()
       callback = fn _, _ -> {:ok, []} end
+      pid_reference = Moxinet.pid_reference(test_pid)
 
-      :ok = SignatureStorage.store(__MODULE__, method, callback, test_pid, storage_pid)
+      assert :ok = SignatureStorage.store(__MODULE__, method, callback, test_pid, storage_pid)
 
       assert %{
                %SignatureStorage.Signature{
                  mock_module: __MODULE__,
-                 pid: ^test_pid,
+                 pid: ^pid_reference,
                  method: ^method
                } => ^callback
              } = :sys.get_state(storage_pid)

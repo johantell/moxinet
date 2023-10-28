@@ -11,4 +11,15 @@ defmodule MoxinetTest do
       assert {"x-moxinet-ref", ^pid_string} = Moxinet.build_mock_header(current_pid)
     end
   end
+
+  describe "pid_reference/1" do
+    test "turns a pid into a text reference" do
+      pid = self()
+
+      reference = Moxinet.pid_reference(pid)
+
+      assert "" <> _ = reference
+      assert 40 = String.length(reference)
+    end
+  end
 end

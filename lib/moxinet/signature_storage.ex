@@ -3,6 +3,8 @@ defmodule Moxinet.SignatureStorage do
 
   use GenServer
 
+  import Moxinet, only: [pid_reference: 1]
+
   defmodule Signature do
     defstruct [:mock_module, :pid, :method]
   end
@@ -18,7 +20,7 @@ defmodule Moxinet.SignatureStorage do
   def store(scope, method, callback, from_pid \\ self(), pid \\ __MODULE__) do
     signature = %Signature{
       mock_module: scope,
-      pid: from_pid,
+      pid: pid_reference(from_pid),
       method: method
     }
 
@@ -28,7 +30,7 @@ defmodule Moxinet.SignatureStorage do
   def find_signature(scope, from_pid, method, pid \\ __MODULE__) do
     signature = %Signature{
       mock_module: scope,
-      pid: from_pid,
+      pid: pid_reference(from_pid),
       method: method
     }
 
