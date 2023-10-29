@@ -5,6 +5,8 @@ defmodule Moxinet.Application do
 
   require Logger
 
+  @http_server Application.compile_env(:moxinet, :http_server, Bandit)
+
   @doc """
   Starts the Moxinet application and related processes necessary to
   fullfil its requirements.
@@ -22,7 +24,7 @@ defmodule Moxinet.Application do
     name = Keyword.get(opts, :name, Moxinet)
 
     children = [
-      {Plug.Cowboy, plug: router, scheme: :http, options: [port: port]},
+      {@http_server, plug: router, scheme: :http, port: port},
       {SignatureStorage, name: SignatureStorage}
     ]
 
