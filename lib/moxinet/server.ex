@@ -7,14 +7,14 @@ defmodule Moxinet.Server do
   While it out of the box will support interactivity
   with `Moxinet.expect/3`, you'll also be able to treat it like
   a Plug and define your own `match` definitions to enable static
-  fallbacks.
+  fallbacks. See `Plug.Router` docs for more details.
 
   ```elixir
   defmodule GithubMock do
     use Moxinet.Server
 
-    match "/pull-requests/closed" do
-      send_resp(conn, 200, %{closed: true})
+    get "/pull-requests/closed" do
+      send_resp(conn, 200, [%{id: "1", closed: true}])
     end
   end
   ```

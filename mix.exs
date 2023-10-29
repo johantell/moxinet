@@ -7,7 +7,12 @@ defmodule Moxinet.MixProject do
       version: "0.1.0",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: [
+        main: "README",
+        extras: ["README.md"],
+        before_closing_head_tag: &before_closing_head_tag/1
+      ]
     ]
   end
 
@@ -21,11 +26,39 @@ defmodule Moxinet.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug, ">= 0.0.0"},
+      {:bandit, ">= 0.0.0", only: :test},
+      {:ex_doc, "~> 0.30.9", only: :dev, runtime: false},
       {:jason, ">= 0.0.0"},
-      {:bandit, ">= 0.0.0", only: :test}
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:plug, ">= 0.0.0"}
     ]
   end
+
+  defp before_closing_head_tag(:html) do
+    """
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.3/dist/mermaid.min.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: document.body.className.includes("dark") ? "dark" : "default"
+      });
+      let id = 0;
+      for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+        const preEl = codeEl.parentElement;
+        const graphDefinition = codeEl.textContent;
+        const graphEl = document.createElement("div");
+        const graphId = "mermaid-graph-" + id++;
+        mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+          graphEl.innerHTML = svg;
+          bindFunctions?.(graphEl);
+          preEl.insertAdjacentElement("afterend", graphEl);
+          preEl.remove();
+        });
+      }
+    });
+    </script>
+    """
+  end
+
+  defp before_closing_head_tag(:epub), do: ""
 end

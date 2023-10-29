@@ -4,6 +4,24 @@ defmodule Moxinet do
   without sacrificing parallel testing.
   """
 
+  @doc """
+  The start functions which will start the `Moxinet` server.
+
+  You'd most likely want to put run this function from
+  your `test_helper.exs`:
+
+  ```elixir
+  {:ok, _pid} = Moxinet.start(router: MyMockServer, port: 4010)
+  ```
+
+  ## Options
+
+    - `router`: A reference to your mock server. *Required*
+    - `port`: The port your mock server will run on. *Required*
+    - `name`: Name of the moxinet supervisor. Defaults to `Moxinet`
+
+  """
+  @spec start(Keyword.t()) :: {:ok, pid} | {:error, atom()}
   defdelegate start(opts), to: Moxinet.Application
 
   @doc """

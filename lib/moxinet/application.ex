@@ -7,17 +7,6 @@ defmodule Moxinet.Application do
 
   @http_server Application.compile_env(:moxinet, :http_server, Bandit)
 
-  @doc """
-  Starts the Moxinet application and related processes necessary to
-  fullfil its requirements.
-
-  ## Options
-
-    - `router`: Your custom router module. *required*
-    - `port`: The port moxinet will listen to. *required*
-    - `name`: Name of the moxinet process. defaults to `Moxinet`
-
-  """
   def start(opts) do
     router = Keyword.fetch!(opts, :router)
     port = Keyword.fetch!(opts, :port)

@@ -1,5 +1,5 @@
 # Moxinet
-Mocking server that, just like mox, allows paralell testing.
+Mocking server that, just like mox, allows parallel testing.
 
 ## Installation
 

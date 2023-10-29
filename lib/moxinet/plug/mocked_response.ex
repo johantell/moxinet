@@ -1,8 +1,6 @@
 defmodule Moxinet.Plug.MockedResponse do
-  @moduledoc """
-  `MockedResponse` helps take care of request with a `x-moxinet-ref` header
-  to execute the stored signature.
-  """
+  @moduledoc false
+
   import Plug.Conn
 
   alias Moxinet.SignatureStorage

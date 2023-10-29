@@ -6,6 +6,8 @@ defmodule Moxinet.SignatureStorage do
   import Moxinet, only: [pid_reference: 1]
 
   defmodule Signature do
+    @moduledoc false
+
     defstruct [:mock_module, :pid, :method]
   end
 
