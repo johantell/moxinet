@@ -1,6 +1,8 @@
 defmodule Moxinet.Application do
   @moduledoc false
 
+  alias Moxinet.SignatureStorage
+
   require Logger
 
   @doc """
@@ -20,7 +22,8 @@ defmodule Moxinet.Application do
     name = Keyword.get(opts, :name, Moxinet)
 
     children = [
-      {Plug.Cowboy, plug: router, scheme: :http, options: [port: port]}
+      {Plug.Cowboy, plug: router, scheme: :http, options: [port: port]},
+      {SignatureStorage, name: SignatureStorage}
     ]
 
     opts = [strategy: :one_for_one, name: name]
