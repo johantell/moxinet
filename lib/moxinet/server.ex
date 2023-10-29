@@ -44,17 +44,12 @@ defmodule Moxinet.Server do
       def expect(http_method, callback, from_pid \\ self()) do
         Moxinet.expect(__MODULE__, http_method, callback, from_pid)
       end
-
-      def handle_errors(conn, %{kind: _kind, reason: _reason, stack: _stack}) do
-        send_resp(conn, conn.status, "Something went wrong")
-      end
     end
   end
 
   defp prelude do
     quote do
       use Plug.Router
-      use Plug.ErrorHandler
 
       import Moxinet
 

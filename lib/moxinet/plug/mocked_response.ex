@@ -7,8 +7,6 @@ defmodule Moxinet.Plug.MockedResponse do
 
   alias Moxinet.SignatureStorage
 
-  require Logger
-
   def init(opts) do
     opts
   end
