@@ -8,15 +8,15 @@ defmodule Moxinet.ApplicationTest do
 
   describe "start/1" do
     test "starts a `SignatureStorage`" do
-      defmodule MyRouter do
-        use Moxinet.Router
+      defmodule MyServer do
+        use Moxinet.Server
 
         match _ do
           send_resp(conn, 200, "Hello world")
         end
       end
 
-      {{:ok, pid}, logged} = with_log(fn -> Application.start(router: MyRouter, port: 4567) end)
+      {{:ok, pid}, logged} = with_log(fn -> Application.start(router: MyServer, port: 4567) end)
 
       assert Process.alive?(pid)
       assert SignatureStorage |> Process.whereis() |> Process.alive?()

@@ -22,7 +22,7 @@ mock-specific requests:
 # test/support/mock_server.ex
 
 defmodule MockServer do
-  use Moxinet.Router
+  use Moxinet.Server
 
   forward("/github", to: GithubMock)
 end

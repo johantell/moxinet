@@ -1,13 +1,12 @@
-defmodule Moxinet.Router do
+defmodule Moxinet.Server do
   @moduledoc """
-  Creates a router for the mocking server where
-  service-specific mocks can be added
+  Creates a mocking server where service-specific mocks can be added
 
   ## Example
 
   ```elixir
-  defmodule MockRouter do
-    use Moxinet.Router
+  defmodule MockServer do
+    use Moxinet.Server
 
     forward("/github", to: GithubMock)
   end
@@ -15,7 +14,7 @@ defmodule Moxinet.Router do
   """
 
   @doc """
-  Turns a module into a Moxinet router
+  Turns a module into a Moxinet server
 
   ## Options
 

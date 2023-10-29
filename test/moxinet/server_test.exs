@@ -1,4 +1,4 @@
-defmodule Moxinet.RouterTest do
+defmodule Moxinet.ServerTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
@@ -6,19 +6,19 @@ defmodule Moxinet.RouterTest do
 
   describe "__using__/1" do
     test "creates a router that can forward requests to servers" do
-      defmodule MockServer do
+      defmodule Mock do
         use Moxinet.Mock
       end
 
-      defmodule MockRouter do
-        use Moxinet.Router
+      defmodule MockServer do
+        use Moxinet.Server
 
-        forward("/external_service", to: MockServer)
+        forward("/external_service", to: Mock)
       end
 
       {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
 
-      MockServer.expect(:get, fn "/mocked_path", _payload ->
+      Mock.expect(:get, fn "/mocked_path", _payload ->
         %{status: 418, body: "Hello world"}
       end)
 
@@ -26,7 +26,7 @@ defmodule Moxinet.RouterTest do
         conn(:get, "/external_service/mocked_path")
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
 
-      assert %{status: 418, resp_body: "Hello world"} = MockRouter.call(conn, MockRouter.init([]))
+      assert %{status: 418, resp_body: "Hello world"} = MockServer.call(conn, MockServer.init([]))
     end
   end
 end
