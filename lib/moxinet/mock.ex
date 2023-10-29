@@ -1,6 +1,6 @@
-defmodule Moxinet.Server do
+defmodule Moxinet.Mock do
   @moduledoc """
-  Supports with building a custom mocking server.
+  Supports building a custom mock.
 
   ## Usage
 
@@ -11,7 +11,7 @@ defmodule Moxinet.Server do
 
   ```elixir
   defmodule GithubMock do
-    use Moxinet.Server
+    use Moxinet.Mock
 
     get "/pull-requests/closed" do
       send_resp(conn, 200, [%{id: "1", closed: true}])
@@ -19,14 +19,14 @@ defmodule Moxinet.Server do
   end
   ```
 
-  Since the mocking server is just another plug, you can
+  Since the mock is just another plug, you can
   choose to use/build custom plugs to extend its functionality as
   a way to add extra verification that your API module does what
   you want it to do, or to replicate a complex API interaction.
 
   ```elixir
   defmodule GithubMock do
-    use Moxinet.Server
+    use Moxinet.Mock
 
     import Plug.BasicAuth
 

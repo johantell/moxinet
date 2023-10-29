@@ -7,7 +7,7 @@ defmodule Moxinet.RouterTest do
   describe "__using__/1" do
     test "creates a router that can forward requests to servers" do
       defmodule MockServer do
-        use Moxinet.Server
+        use Moxinet.Mock
       end
 
       defmodule MockRouter do
