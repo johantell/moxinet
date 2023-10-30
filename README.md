@@ -1,5 +1,5 @@
 # Moxinet
-Mocking server that, just like mox, allows parallel testing.
+Mocking server that, just like `mox`, allows parallel testing.
 
 ## Installation
 
@@ -15,7 +15,7 @@ end
 ```
 
 ## Usage
-To use moxinet you must first define your mock server, from which you'll forward
+To use `moxinet` you must first define your mock server, from which you'll forward
 mock-specific requests:
 
 ```elixir
@@ -56,11 +56,11 @@ describe "create_pr/1" do
 end
 ```
 
-**NOTE**: One small caveat with moxinet is that in order for us to be able to match
+**NOTE**: One small caveat with `moxinet` is that in order for us to be able to match
 a mock defined in a request with an incoming request, the requests must send the `x-moxinet-ref` header.
-Most http-libraries allows adding custom headers to your requests but that might not always be the case.
+Most HTTP libraries allows adding custom headers to your requests, but that might not always be the case.
 
-It's also not recommended to send the `x-moxinet-ref` header outside of your test environment, meaning you'd
+It's also not recommended to send the `x-moxinet-ref` header outside your test environment, meaning you'd
 likely want to do find a way to conditionally add it. Here is one example on how to achieve it in `req`:
 
 ```elixir
@@ -89,7 +89,7 @@ end
 ```
 
 ## How it works
-Moxinet works a lot similar to `mox` except it'll focus on solving the same issue for HTTP request.
+`Moxinet` works a lot similar to `mox` except it'll focus on solving the same issue for HTTP request.
 
 The test pid will be registered in the mock registry, where it can later be accessed from inside the mock.
 

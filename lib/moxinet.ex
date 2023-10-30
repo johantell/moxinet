@@ -1,6 +1,6 @@
 defmodule Moxinet do
   @moduledoc """
-  Moxinet helps you mock the internet at the HTTP layer
+  `Moxinet` helps you mock the internet at the HTTP layer
   without sacrificing parallel testing.
   """
 
