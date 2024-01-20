@@ -39,7 +39,13 @@ defmodule Moxinet do
   """
   @spec pid_reference(pid()) :: String.t()
   def pid_reference(pid) when is_pid(pid) do
-    pid
+    base_pid =
+      case Process.get(:"$callers") do
+        [first_pid | _rest] -> first_pid
+        _ -> pid
+      end
+
+    base_pid
     |> :erlang.term_to_binary()
     |> Base.encode64()
   end

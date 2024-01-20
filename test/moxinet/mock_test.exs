@@ -22,6 +22,32 @@ defmodule Moxinet.MockTest do
       assert %Plug.Conn{status: 499, resp_body: "My body"} = MyMock.call(conn, [])
     end
 
+    test "links the mocked responses to requests made in child processes" do
+      defmodule MyChildMock do
+        use Moxinet.Mock
+      end
+
+      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
+
+      :ok =
+        MyChildMock.expect(
+          :post,
+          fn "/path", _payload -> %{status: 499, body: "My body"} end,
+          self()
+        )
+
+      task =
+        Task.async(fn ->
+          conn(:post, "/path")
+          |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+          |> MyChildMock.call([])
+        end)
+
+      response = Task.await(task)
+
+      assert %Plug.Conn{status: 499, resp_body: "My body"} = response
+    end
+
     test "gives a 500 response when no signature matched" do
       defmodule MyFailingMock do
         use Moxinet.Mock
