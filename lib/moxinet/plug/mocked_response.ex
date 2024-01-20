@@ -18,7 +18,7 @@ defmodule Moxinet.Plug.MockedResponse do
       |> halt()
     else
       {:error, :missing_pid_reference} ->
-        fail_and_send(conn, "No valid reference was found in the `x-moxinet-ref` header.")
+        fail_and_send(conn, "Invalid reference was found in the `x-moxinet-ref` header.")
 
       {:error, :not_found} ->
         fail_and_send(conn, "No registered mock was found for the registered pid.")
