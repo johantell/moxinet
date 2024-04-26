@@ -15,7 +15,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   describe "call/2" do
     test "responds with applied signature and halts the conn" do
-      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
+      _ = SignatureStorage.start_link(name: SignatureStorage)
       response_body = %{response: "yes"}
 
       conn =
@@ -47,7 +47,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
     end
 
     test "responds with a 500-error with a detailed body when no signatures matched" do
-      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
+      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       conn =
         conn(:get, "/path")

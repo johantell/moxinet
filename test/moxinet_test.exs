@@ -22,7 +22,7 @@ defmodule MoxinetTest do
         )
 
       assert true == Process.alive?(pid)
-      assert true == Process.alive?(Moxinet.SignatureStorage |> Process.whereis())
+      assert true == FakeSignatureStorage |> Process.whereis() |> Process.alive?()
     end
   end
 

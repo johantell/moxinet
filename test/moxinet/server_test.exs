@@ -16,7 +16,7 @@ defmodule Moxinet.ServerTest do
         forward("/external_service", to: Mock)
       end
 
-      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
+      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       Mock.expect(:get, "/mocked_path", fn "/mocked_path", _payload ->
         %{status: 418, body: "Hello world"}
