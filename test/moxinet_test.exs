@@ -3,6 +3,29 @@ defmodule MoxinetTest do
 
   doctest Moxinet
 
+  describe "start/1" do
+    test "starts the `SignatureStorage`" do
+      defmodule FakeRouter do
+        use Plug.Router
+
+        get "/" do
+          send_resp(conn, 200, "Hello world")
+        end
+      end
+
+      {:ok, pid} =
+        Moxinet.start(
+          port: 0000,
+          router: FakeRouter,
+          name: FakeMoxinet,
+          signature_storage: FakeSignatureStorage
+        )
+
+      assert true == Process.alive?(pid)
+      assert true == Process.alive?(Moxinet.SignatureStorage |> Process.whereis())
+    end
+  end
+
   describe "build_mock_header/1" do
     test "returns a tuple with header name and base64 encoded reference of a pid" do
       current_pid = self()

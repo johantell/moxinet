@@ -54,8 +54,8 @@ defmodule Moxinet do
   Mocks a call for the passed module when used from a certain pid, defaulting `self()`
   """
   @type http_method :: :get | :post | :patch | :put | :delete | :options
-  @spec expect(module(), http_method, function(), pid) :: :ok
-  defdelegate expect(module, http_method, callback, from_pid \\ self()),
+  @spec expect(module(), http_method, binary(), function(), pid) :: :ok
+  defdelegate expect(module, http_method, path, callback, from_pid \\ self()),
     to: Moxinet.SignatureStorage,
     as: :store
 end

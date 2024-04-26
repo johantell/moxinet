@@ -28,6 +28,15 @@ defmodule MockServer do
 end
 ```
 
+Start `moxinet` in `test_helper.exs` (before `ExUnit.start()`)
+```elixir
+{:ok, _} = Moxinet.start()
+
+ExUnit.start()
+```
+
+---
+
 If you're familiar with `plug`, you'll see that our mock server is indeed a plug and can therefore
 be extended like one.
 
@@ -42,12 +51,12 @@ end
 ```
 
 
-In tests, you can create rules for how your mocks should behave through `expect/3`:
+In tests, you can create rules for how your mocks should behave through `expect/4`:
 
 ```elixir
 describe "create_pr/1" do
   test "creates a pull request when" do
-    GithubMock.expect(:post, fn "/pull-requests/123", _payload ->
+    GithubMock.expect(:post, "/pull-requests/123", fn _payload ->
       %{status: 202, body: %{id: "pull-request-id"}}
     end)
 

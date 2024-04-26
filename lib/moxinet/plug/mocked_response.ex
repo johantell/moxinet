@@ -11,7 +11,13 @@ defmodule Moxinet.Plug.MockedResponse do
 
   def call(conn, scope: scope) do
     with {:ok, pid} <- get_pid_reference(conn),
-         {:ok, signature} <- SignatureStorage.find_signature(scope, pid, conn.method) do
+         {:ok, signature} <-
+           SignatureStorage.find_signature(
+             scope,
+             pid,
+             conn.method,
+             Path.join(["/" | conn.path_info])
+           ) do
       conn
       |> apply_signature(signature)
       |> send_resp()
@@ -21,7 +27,10 @@ defmodule Moxinet.Plug.MockedResponse do
         fail_and_send(conn, "Invalid reference was found in the `x-moxinet-ref` header.")
 
       {:error, :not_found} ->
-        fail_and_send(conn, "No registered mock was found for the registered pid.")
+        fail_and_send(
+          conn,
+          "No registered mock was found for the registered pid. #{inspect(conn)}"
+        )
     end
   end
 

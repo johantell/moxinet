@@ -23,7 +23,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
         |> put_req_header("accept", "application/json")
 
-      SignatureStorage.store(CustomAPIMock, :get, fn "/path", _payload ->
+      SignatureStorage.store(CustomAPIMock, :get, "/path", fn "/path", _payload ->
         %{status: 200, body: response_body}
       end)
 
@@ -58,7 +58,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       assert :sent == conn.state
       assert 500 == conn.status
-      assert conn.resp_body == "No registered mock was found for the registered pid."
+      assert conn.resp_body =~ "No registered mock was found for the registered pid."
     end
 
     test "raises an `FunctionClauseError` when signature matches but the anonymous function doesn't" do
@@ -69,7 +69,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
         |> put_req_header("accept", "application/json")
 
-      SignatureStorage.store(CustomAPIMock, :get, fn "/path", %{not_matched: true} ->
+      SignatureStorage.store(CustomAPIMock, :get, "/path", fn "/path", %{not_matched: true} ->
         %{status: 200, body: %{success: true}}
       end)
 

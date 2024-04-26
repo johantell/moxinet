@@ -17,7 +17,12 @@ defmodule Moxinet.MockTest do
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
 
       :ok =
-        MyMock.expect(:post, fn "/path", _payload -> %{status: 499, body: "My body"} end, self())
+        MyMock.expect(
+          :post,
+          "/path",
+          fn _, _payload -> %{status: 499, body: "My body"} end,
+          self()
+        )
 
       assert %Plug.Conn{status: 499, resp_body: "My body"} = MyMock.call(conn, [])
     end
@@ -32,6 +37,7 @@ defmodule Moxinet.MockTest do
       :ok =
         MyChildMock.expect(
           :post,
+          "/path",
           fn "/path", _payload -> %{status: 499, body: "My body"} end,
           self()
         )
@@ -61,7 +67,7 @@ defmodule Moxinet.MockTest do
 
       assert %{
                status: 500,
-               resp_body: "No registered mock was found for the registered pid."
+               resp_body: "No registered mock was found for the registered pid." <> _
              } = MyFailingMock.call(conn, [])
     end
   end

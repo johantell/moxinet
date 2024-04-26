@@ -37,12 +37,17 @@ defmodule Moxinet.Mock do
 
   defmacro __using__(_opts) do
     quote do
+      use Plug.Debugger, otp_app: :moxinet
+
       unquote(prelude())
+
+      plug :match
+      plug :dispatch
 
       unquote(not_found_matcher())
 
-      def expect(http_method, callback, from_pid \\ self()) do
-        Moxinet.expect(__MODULE__, http_method, callback, from_pid)
+      def expect(http_method, path, callback, from_pid \\ self()) do
+        Moxinet.expect(__MODULE__, http_method, path, callback, from_pid)
       end
     end
   end
@@ -60,6 +65,8 @@ defmodule Moxinet.Mock do
   defp not_found_matcher do
     quote location: :keep, generated: true do
       match _ do
+        dbg(:no_match)
+
         send_resp(
           var!(conn),
           404,

@@ -11,10 +11,11 @@ defmodule Moxinet.Application do
     router = Keyword.fetch!(opts, :router)
     port = Keyword.fetch!(opts, :port)
     name = Keyword.get(opts, :name, Moxinet)
+    signature_storage = Keyword.get(opts, :signature_storage, SignatureStorage)
 
     children = [
       {@http_server, plug: router, scheme: :http, port: port},
-      {SignatureStorage, name: SignatureStorage}
+      {SignatureStorage, name: signature_storage}
     ]
 
     opts = [strategy: :one_for_one, name: name]

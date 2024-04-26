@@ -6,7 +6,7 @@ defmodule Moxinet.MixProject do
       app: :moxinet,
       version: "0.1.0",
       elixir: "~> 1.15",
-      start_permanent: Mix.env() == :prod,
+      start_permanent: false,
       deps: deps(),
       docs: [
         main: "README",
@@ -26,10 +26,13 @@ defmodule Moxinet.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:bandit, ">= 0.0.0", only: :test},
-      {:ex_doc, "~> 0.30.9", only: :dev, runtime: false},
+      {:bandit, ">= 0.0.0"},
       {:jason, ">= 0.0.0"},
-      {:plug, ">= 0.0.0"}
+      {:plug, ">= 0.0.0"},
+      {:ex_doc, "~> 0.30.9", only: :dev, runtime: false},
+
+      # adapters
+      {:tesla, ">= 0.0.0", optional: true}
     ]
   end
 
