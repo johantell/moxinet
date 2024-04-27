@@ -27,6 +27,8 @@ defmodule Moxinet.SignatureStorage do
       path: path
     }
 
+    Process.monitor(from_pid)
+
     GenServer.call(pid, {:store, signature, callback})
   end
 

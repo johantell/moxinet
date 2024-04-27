@@ -18,7 +18,7 @@ defmodule Moxinet.ServerTest do
 
       _ = SignatureStorage.start_link(name: SignatureStorage)
 
-      Mock.expect(:get, "/mocked_path", fn "/mocked_path", _payload ->
+      Mock.expect(:get, "/mocked_path", fn _payload ->
         %{status: 418, body: "Hello world"}
       end)
 

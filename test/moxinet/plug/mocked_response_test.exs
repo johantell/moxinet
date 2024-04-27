@@ -23,7 +23,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
         |> put_req_header("accept", "application/json")
 
-      SignatureStorage.store(CustomAPIMock, :get, "/path", fn "/path", _payload ->
+      SignatureStorage.store(CustomAPIMock, :get, "/path", fn _payload ->
         %{status: 200, body: response_body}
       end)
 
@@ -69,7 +69,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
         |> put_req_header("accept", "application/json")
 
-      SignatureStorage.store(CustomAPIMock, :get, "/path", fn "/path", %{not_matched: true} ->
+      SignatureStorage.store(CustomAPIMock, :get, "/path", fn %{not_matched: true} ->
         %{status: 200, body: %{success: true}}
       end)
 

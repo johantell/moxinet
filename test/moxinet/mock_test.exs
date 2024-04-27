@@ -10,19 +10,14 @@ defmodule Moxinet.MockTest do
         use Moxinet.Mock
       end
 
-      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
+      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       conn =
         conn(:post, "/path")
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
 
       :ok =
-        MyMock.expect(
-          :post,
-          "/path",
-          fn _, _payload -> %{status: 499, body: "My body"} end,
-          self()
-        )
+        MyMock.expect(:post, "/path", fn _payload -> %{status: 499, body: "My body"} end, self())
 
       assert %Plug.Conn{status: 499, resp_body: "My body"} = MyMock.call(conn, [])
     end
@@ -32,13 +27,13 @@ defmodule Moxinet.MockTest do
         use Moxinet.Mock
       end
 
-      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
+      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       :ok =
         MyChildMock.expect(
           :post,
           "/path",
-          fn "/path", _payload -> %{status: 499, body: "My body"} end,
+          fn _payload -> %{status: 499, body: "My body"} end,
           self()
         )
 

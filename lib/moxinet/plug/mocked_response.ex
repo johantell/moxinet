@@ -16,7 +16,7 @@ defmodule Moxinet.Plug.MockedResponse do
              scope,
              pid,
              conn.method,
-             Path.join(["/" | conn.path_info])
+             build_path(conn)
            ) do
       conn
       |> apply_signature(signature)
@@ -29,9 +29,33 @@ defmodule Moxinet.Plug.MockedResponse do
       {:error, :not_found} ->
         fail_and_send(
           conn,
-          "No registered mock was found for the registered pid. #{inspect(conn)}"
+          """
+          No registered mock was found for the registered pid.
+
+          #{format_error_details(conn)}
+          """
         )
     end
+  end
+
+  defp format_error_details(conn) do
+    """
+    method: #{conn.method}
+    path: #{build_path(conn)}
+    """
+  end
+
+  defp build_path(%Plug.Conn{path_info: path_info, query_string: query_string}) do
+    ["/" | path_info]
+    |> Path.join()
+    |> URI.parse()
+    |> then(fn uri ->
+      case query_string do
+        "" -> uri
+        query -> URI.append_query(uri, query)
+      end
+    end)
+    |> URI.to_string()
   end
 
   defp get_pid_reference(%Plug.Conn{} = conn) do
@@ -44,13 +68,16 @@ defmodule Moxinet.Plug.MockedResponse do
     end
   end
 
-  defp apply_signature(conn, callback) when is_function(callback, 2) do
-    path = Path.join(["/"] ++ conn.path_info)
+  defp apply_signature(conn, callback) when is_function(callback) do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
 
     body = if json_body?(conn), do: Jason.decode!(body), else: nil
 
-    response = callback.(path, body)
+    response =
+      case conn.method do
+        "GET" -> callback.(nil)
+        _other -> callback.(body)
+      end
 
     conn
     |> put_response_status(response)
