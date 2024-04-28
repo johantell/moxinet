@@ -30,9 +30,7 @@ defmodule Moxinet.MixProject do
       {:jason, ">= 0.0.0"},
       {:plug, ">= 0.0.0"},
       {:ex_doc, "~> 0.30.9", only: :dev, runtime: false},
-
-      # adapters
-      {:tesla, ">= 0.0.0", optional: true}
+      {:credo, "~> 1.7.5", only: :dev, runtime: false}
     ]
   end
 
