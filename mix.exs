@@ -36,7 +36,7 @@ defmodule Moxinet.MixProject do
       {:bandit, ">= 0.0.0"},
       {:jason, ">= 0.0.0"},
       {:plug, ">= 0.0.0"},
-      {:ex_doc, "~> 0.30.9", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.32.1", only: :dev, runtime: false},
       {:credo, "~> 1.7.5", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4.3", only: :dev, runtime: false}
     ]
