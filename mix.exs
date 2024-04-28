@@ -1,10 +1,12 @@
 defmodule Moxinet.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
   def project do
     [
       app: :moxinet,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.15",
       start_permanent: false,
       deps: deps(),
