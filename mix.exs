@@ -12,7 +12,7 @@ defmodule Moxinet.MixProject do
       start_permanent: false,
       deps: deps(),
       docs: [
-        main: "README",
+        main: "readme",
         extras: ["README.md"],
         before_closing_head_tag: &before_closing_head_tag/1
       ],
