@@ -7,6 +7,7 @@ defmodule Moxinet.MixProject do
     [
       app: :moxinet,
       version: @version,
+      description: "Mocking server that, just like mox, allows parallel testing, but over HTTP.",
       elixir: "~> 1.15",
       start_permanent: false,
       deps: deps(),
@@ -14,6 +15,10 @@ defmodule Moxinet.MixProject do
         main: "README",
         extras: ["README.md"],
         before_closing_head_tag: &before_closing_head_tag/1
+      ],
+      package: [
+        licenses: licenses(),
+        links: links()
       ]
     ]
   end
@@ -65,4 +70,15 @@ defmodule Moxinet.MixProject do
   end
 
   defp before_closing_head_tag(:epub), do: ""
+
+  defp licenses do
+    ["MIT"]
+  end
+
+  defp links do
+    %{
+      "Github" => "https://github.com/johantell/moxinet",
+      "HexDocs" => "https://hexdocs.pm/moxinet"
+    }
+  end
 end

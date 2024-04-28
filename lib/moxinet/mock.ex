@@ -5,7 +5,7 @@ defmodule Moxinet.Mock do
   ## Usage
 
   While it out of the box will support interactivity
-  with `Moxinet.expect/3`, you'll also be able to treat it like
+  with `Moxinet.expect/4`, you'll also be able to treat it like
   a Plug and define your own `match` definitions to enable static
   fallbacks. See `Plug.Router` docs for more details.
 
