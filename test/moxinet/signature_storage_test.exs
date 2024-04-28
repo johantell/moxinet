@@ -21,7 +21,7 @@ defmodule Moxinet.SignatureStorageTest do
                  pid: ^pid_reference,
                  method: "POST",
                  path: ^path
-               } => ^callback
+               } => %SignatureStorage.Mock{callback: ^callback}
              } = :sys.get_state(storage_pid)
     end
   end
@@ -95,7 +95,7 @@ defmodule Moxinet.SignatureStorageTest do
       assert {:ok, ^callback} =
                SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
 
-      assert {:error, :not_found} =
+      assert {:error, :exceeds_usage_limit} =
                SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
     end
   end

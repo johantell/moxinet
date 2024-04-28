@@ -11,6 +11,12 @@ defmodule Moxinet.SignatureStorage do
     defstruct [:mock_module, :pid, :method, :path]
   end
 
+  defmodule Mock do
+    @moduledoc false
+
+    defstruct [:owner, :callback, :usage_limit, :used]
+  end
+
   def start_link(opts) do
     GenServer.start_link(__MODULE__, %{}, opts)
   end
@@ -29,7 +35,14 @@ defmodule Moxinet.SignatureStorage do
 
     Process.monitor(from_pid)
 
-    GenServer.call(pid, {:store, signature, callback})
+    ref = %Mock{
+      callback: callback,
+      owner: from_pid,
+      usage_limit: 1,
+      used: 0
+    }
+
+    GenServer.call(pid, {:store, signature, ref})
   end
 
   def find_signature(scope, from_pid, method, path, pid \\ __MODULE__) do
@@ -49,11 +62,14 @@ defmodule Moxinet.SignatureStorage do
 
   def handle_call({:find_signature, signature}, _from, state) do
     {response, state} =
-      case Map.pop(state, signature, :not_found) do
-        {callback, state} when is_function(callback) ->
-          {{:ok, callback}, state}
+      case Map.get(state, signature, :not_found) do
+        %Mock{used: used, usage_limit: usage_limit} = mock when used < usage_limit ->
+          {{:ok, mock.callback}, Map.put(state, signature, %{mock | used: used + 1})}
 
-        {:not_found, state} ->
+        %Mock{used: used, usage_limit: usage_limit} when used >= usage_limit ->
+          {{:error, :exceeds_usage_limit}, state}
+
+        :not_found ->
           {{:error, :not_found}, state}
       end
 
