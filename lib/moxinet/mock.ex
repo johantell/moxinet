@@ -65,8 +65,6 @@ defmodule Moxinet.Mock do
   defp not_found_matcher do
     quote location: :keep, generated: true do
       match _ do
-        dbg(:no_match)
-
         send_resp(
           var!(conn),
           404,
