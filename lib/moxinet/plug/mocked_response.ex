@@ -71,12 +71,14 @@ defmodule Moxinet.Plug.MockedResponse do
   defp apply_signature(conn, callback) when is_function(callback) do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-    body = if json_body?(conn), do: Jason.decode!(body), else: nil
-
     response =
       case conn.method do
-        "GET" -> callback.(nil)
-        _other -> callback.(body)
+        "GET" ->
+          callback.(nil)
+
+        _other ->
+          body = if json_body?(conn), do: Jason.decode!(body), else: nil
+          callback.(body)
       end
 
     conn
