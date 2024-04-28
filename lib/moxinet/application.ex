@@ -8,6 +8,8 @@ defmodule Moxinet.Application do
   @http_server Application.compile_env(:moxinet, :http_server, Bandit)
 
   def start(opts) do
+    Keyword.validate!(opts, [:router, :port, :name, :signature_storage])
+
     router = Keyword.fetch!(opts, :router)
     port = Keyword.fetch!(opts, :port)
     name = Keyword.get(opts, :name, Moxinet)
