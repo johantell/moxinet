@@ -1,18 +1,59 @@
 # Moxinet
 Mocking server that, just like `mox`, allows parallel testing.
 
+HexDocs: https://hexdocs.pm/moxinet
+
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `moxinet` to your list of dependencies in `mix.exs`:
+Install the package by adding `moxinet` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:moxinet, "~> 0.1.0"}
+    {:moxinet, "~> 0.1.0", only: :test}
   ]
 end
 ```
+
+## Why not use `mox` instead?
+When testing calls to external servers `mox` tends to guide the user towards
+replacing the whole HTTP layer which is usually fine when the code is controlled
+by an external library, holding the responsibility of correctness on its own.
+
+A commonly seen pattern where behaviors play the centric role like the following:
+
+```elixir
+defmodule GithubAPI do
+  defmodule HTTPBehaviour do
+    @callback post(String.t(), Keyword.t()) :: {:ok, Map.t()} | {:error, :atom}
+  end
+
+  defmodule HTTP do
+    @behaviour GithubAPI.HTTPBehaviour
+    def post(url, opts) do
+      # Perform HTTP request
+    end
+  end
+
+  def create_pr(attrs) do
+    impl().post("/pull-requests", body: attrs)
+  end
+
+  defp impl, do: Application.get_env(:github_api_http_module, HTTP)
+end
+```
+
+will absolutely do the job, but there are a few drawbacks:
+
+1. The `HTTP` remains untested as that is not being used by the test suite
+2. HTTP client libraries (like tesla) usually allow defining headers, authentication,
+   and in most cases also encodes passed data structures to JSON, where custom behavior
+   that filters/encodes data in certain ways can be included. I've seen cases where a
+   `@derive {Jason, only: [...]}` caused a bug that wasn't a bug according to all tests
+   that verified the expected data was sent to the HTTP layer.
+
+`moxinet` aims to fill those gaps while also reducing the need for behaviors and mocks
+
 
 ## Usage
 To use `moxinet` you must first define your mock server, from which you'll forward
@@ -35,6 +76,18 @@ Start `moxinet` in `test_helper.exs` (before `ExUnit.start()`)
 ExUnit.start()
 ```
 
+Let the configuration decide whether the API should call the remote server or the local mock server:
+
+```elixir
+# config/config.exs
+config :my_app, GithubAPI,
+  url: "https://api.github.com"
+
+# config/test.exs
+config :my_app, GithubAPI,
+  url: "http://localhost:4040/github"
+```
+
 ---
 
 If you're familiar with `plug`, you'll see that our mock server is indeed a plug and can therefore
@@ -44,7 +97,6 @@ After you've added your server, mocks can be defined:
 
 ```elixir
 # test/support/mocks/github_mock.ex
-
 defmodule GithubMock do
   use Moxinet.Mock
 end
@@ -111,9 +163,3 @@ flowchart TD
     MS --> GMS[Github Mock]
     GMS -.HTTP response.-> API
 ```
-
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/moxinet>.
-
