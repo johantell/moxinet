@@ -1,3 +1,7 @@
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/johantell/moxinet/.github%2Fworkflows%2Felixir.yml)
+![Hex.pm Version](https://img.shields.io/hexpm/v/moxinet)
+![Hex.pm License](https://img.shields.io/hexpm/l/moxinet)
+
 # Moxinet
 Mocking server that, just like `mox`, allows parallel testing.
 
