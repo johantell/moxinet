@@ -19,47 +19,7 @@ def deps do
 end
 ```
 
-## Why not use `mox` instead?
-When testing calls to external servers `mox` tends to guide the user towards
-replacing the whole HTTP layer which is usually fine when the code is controlled
-by an external library, holding the responsibility of correctness on its own.
-
-A commonly seen pattern where behaviors play the centric role like the following:
-
-```elixir
-defmodule GithubAPI do
-  defmodule HTTPBehaviour do
-    @callback post(String.t(), Keyword.t()) :: {:ok, Map.t()} | {:error, :atom}
-  end
-
-  defmodule HTTP do
-    @behaviour GithubAPI.HTTPBehaviour
-    def post(url, opts) do
-      # Perform HTTP request
-    end
-  end
-
-  def create_pr(attrs) do
-    impl().post("/pull-requests", body: attrs)
-  end
-
-  defp impl, do: Application.get_env(:github_api_http_module, HTTP)
-end
-```
-
-will absolutely do the job, but there are a few drawbacks:
-
-1. The `HTTP` remains untested as that is not being used by the test suite
-2. HTTP client libraries (like tesla) usually allow defining headers, authentication,
-   and in most cases also encodes passed data structures to JSON, where custom behavior
-   that filters/encodes data in certain ways can be included. I've seen cases where a
-   `@derive {Jason, only: [...]}` caused a bug that wasn't a bug according to all tests
-   that verified the expected data was sent to the HTTP layer.
-
-`moxinet` aims to fill those gaps while also reducing the need for behaviors and mocks
-
-
-## Usage
+## Getting started
 To use `moxinet` you must first define your mock server, from which you'll forward
 mock-specific requests:
 
@@ -106,7 +66,6 @@ defmodule GithubMock do
 end
 ```
 
-
 In tests, you can create rules for how your mocks should behave through `expect/4`:
 
 ```elixir
@@ -152,6 +111,46 @@ defmodule GithubAPI do
   end
 end
 ```
+
+## Why not use `mox` instead?
+When testing calls to external servers `mox` tends to guide the user towards
+replacing the whole HTTP layer which is usually fine when the code is controlled
+by an external library, holding the responsibility of correctness on its own.
+
+A commonly seen pattern where behaviors play the centric role like the following:
+
+```elixir
+defmodule GithubAPI do
+  defmodule HTTPBehaviour do
+    @callback post(String.t(), Keyword.t()) :: {:ok, Map.t()} | {:error, :atom}
+  end
+
+  defmodule HTTP do
+    @behaviour GithubAPI.HTTPBehaviour
+    def post(url, opts) do
+      # Perform HTTP request
+    end
+  end
+
+  def create_pr(attrs) do
+    impl().post("/pull-requests", body: attrs)
+  end
+
+  defp impl, do: Application.get_env(:github_api_http_module, HTTP)
+end
+```
+
+will absolutely do the job, but there are a few drawbacks:
+
+1. The `HTTP` remains untested as that is not being used by the test suite
+2. HTTP client libraries (like tesla) usually allow defining headers, authentication,
+   and in most cases also encodes passed data structures to JSON, where custom behavior
+   that filters/encodes data in certain ways can be included. I've seen cases where a
+   `@derive {Jason, only: [...]}` caused a bug that wasn't a bug according to all tests
+   that verified the expected data was sent to the HTTP layer.
+
+`moxinet` aims to fill those gaps while also reducing the need for behaviors and mocks
+
 
 ## How it works
 `Moxinet` works a lot similar to `mox` except it'll focus on solving the same issue for HTTP request.
