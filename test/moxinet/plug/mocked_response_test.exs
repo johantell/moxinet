@@ -34,6 +34,26 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert conn.resp_body == Jason.encode!(response_body)
     end
 
+    test "Sends non nil payload for non 'application/json' post requests" do
+      test_pid = Kernel.self()
+      _ = SignatureStorage.start_link(name: SignatureStorage)
+      response_body = "test=yes"
+
+      conn =
+        conn(:post, "/path")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn payload ->
+        Kernel.send(test_pid, {:post_payload, payload})
+        %{status: 200, body: response_body}
+      end)
+
+      _conn = MockedResponse.call(conn, @opts)
+
+      assert_receive {:post_payload, payload}
+      refute payload == nil
+    end
+
     test "responds with a 500-error when no `x-moxinet-ref` header was defined" do
       conn =
         conn(:get, "/path")
