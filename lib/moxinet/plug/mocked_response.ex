@@ -77,13 +77,14 @@ defmodule Moxinet.Plug.MockedResponse do
           callback.(nil)
 
         _other ->
-          if json_body?(conn) do
-            callback.(Jason.decode!(body))
-          else
-            # We still want to pass a request body to the expect function for other
-            # content types, for example application/x-www-form-urlencoded
-            callback.(body)
-          end
+          body = 
+            if json_body?(conn) do
+              Jason.decode!(body)
+            else
+              body
+            end
+          
+          callback.(body)
       end
 
     conn
