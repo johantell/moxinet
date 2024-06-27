@@ -34,7 +34,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert conn.resp_body == Jason.encode!(response_body)
     end
 
-    test "Sends non nil payload for non 'application/json' post requests" do
+    test "passes payload for non 'application/json' post requests" do
       test_pid = Kernel.self()
       _ = SignatureStorage.start_link(name: SignatureStorage)
       response_body = "test=yes"
