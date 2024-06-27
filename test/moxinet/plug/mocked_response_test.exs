@@ -45,7 +45,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       SignatureStorage.store(CustomAPIMock, :post, "/path", fn payload ->
         Kernel.send(test_pid, {:post_payload, payload})
-        %{status: 200, body: response_body}
+        %{status: 200, body: "test=yes"}
       end)
 
       _conn = MockedResponse.call(conn, @opts)
