@@ -77,7 +77,13 @@ defmodule Moxinet.Plug.MockedResponse do
           callback.(nil)
 
         _other ->
-          body = if json_body?(conn), do: Jason.decode!(body), else: nil
+          body =
+            if json_body?(conn) do
+              Jason.decode!(body)
+            else
+              body
+            end
+
           callback.(body)
       end
 
