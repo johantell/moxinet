@@ -39,7 +39,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
       _ = SignatureStorage.start_link(name: SignatureStorage)
 
       conn =
-        conn(:post, "/path", request_body)
+        conn(:post, "/path", "test=yes")
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
 
       SignatureStorage.store(CustomAPIMock, :post, "/path", fn payload ->
