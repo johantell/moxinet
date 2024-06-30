@@ -69,10 +69,12 @@ end
 In tests, you can create rules for how your mocks should behave through `expect/4`:
 
 ```elixir
+alias Moxinet.Response
+
 describe "create_pr/1" do
   test "creates a pull request when" do
     GithubMock.expect(:post, "/pull-requests/123", fn _payload ->
-      %{status: 202, body: %{id: "pull-request-id"}}
+      %Response{status: 202, body: %{id: "pull-request-id"}}
     end)
 
     assert {:ok, %{status: 202, body: %{"id" => "pull-request-id"}}}} = GithubAPI.create_pr(title: "My PR")
