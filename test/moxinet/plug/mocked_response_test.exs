@@ -7,6 +7,12 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   @opts MockedResponse.init(scope: CustomAPIMock)
 
+  setup_all do
+    _ = SignatureStorage.start_link(name: SignatureStorage)
+
+    {:ok, signature_storage: SignatureStorage}
+  end
+
   describe "init/1" do
     test "returns the passed options" do
       assert [scope: CustomAPIMock] == MockedResponse.init(scope: CustomAPIMock)
@@ -15,7 +21,6 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   describe "call/2" do
     test "responds with applied signature and halts the conn" do
-      _ = SignatureStorage.start_link(name: SignatureStorage)
       response_body = %{response: "yes"}
 
       conn =
@@ -34,9 +39,20 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert conn.resp_body == Jason.encode!(response_body)
     end
 
+    test "considers query params to be part of path" do
+      conn =
+        conn(:get, "/path?param=true")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+
+      SignatureStorage.store(CustomAPIMock, :get, "/path?param=true", fn _payload ->
+        %{status: 200, body: "test=yes"}
+      end)
+
+      assert %Plug.Conn{status: 200} = MockedResponse.call(conn, @opts)
+    end
+
     test "passes payload for non 'application/json' post requests" do
       test_pid = Kernel.self()
-      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       conn =
         conn(:post, "/path", "test=yes")
@@ -66,8 +82,6 @@ defmodule Moxinet.Plug.MockedResponseTest do
     end
 
     test "responds with a 500-error with a detailed body when no signatures matched" do
-      _ = SignatureStorage.start_link(name: SignatureStorage)
-
       conn =
         conn(:get, "/path")
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
@@ -81,8 +95,6 @@ defmodule Moxinet.Plug.MockedResponseTest do
     end
 
     test "raises an `FunctionClauseError` when signature matches but the anonymous function doesn't" do
-      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
-
       conn =
         conn(:get, "/path")
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
@@ -95,6 +107,23 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert_raise FunctionClauseError, fn ->
         MockedResponse.call(conn, @opts)
       end
+    end
+
+    test "sends `nil` as payload for an empty request body" do
+      test_pid = self()
+
+      conn =
+        conn(:post, "/path", "")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn payload ->
+        send(test_pid, {:payload, payload})
+        %{status: 200}
+      end)
+
+      MockedResponse.call(conn, @opts)
+
+      assert_receive {:payload, nil}
     end
   end
 end

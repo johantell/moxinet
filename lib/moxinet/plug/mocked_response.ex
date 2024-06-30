@@ -49,13 +49,16 @@ defmodule Moxinet.Plug.MockedResponse do
     ["/" | path_info]
     |> Path.join()
     |> URI.parse()
-    |> then(fn uri ->
-      case query_string do
-        "" -> uri
-        query -> URI.append_query(uri, query)
-      end
-    end)
+    |> append_uri_query(query_string)
     |> URI.to_string()
+  end
+
+  def append_uri_query(%URI{} = uri, query) when is_binary(query) and query !== "" do
+    URI.append_query(uri, query)
+  end
+
+  def append_uri_query(%URI{} = uri, _query) do
+    uri
   end
 
   defp get_pid_reference(%Plug.Conn{} = conn) do
@@ -71,25 +74,21 @@ defmodule Moxinet.Plug.MockedResponse do
   defp apply_signature(conn, callback) when is_function(callback) do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-    response =
-      case conn.method do
-        "GET" ->
-          callback.(nil)
+    body = decode_decodable_body(conn, body)
 
-        _other ->
-          body =
-            if json_body?(conn) do
-              Jason.decode!(body)
-            else
-              body
-            end
-
-          callback.(body)
-      end
+    response = callback.(body)
 
     conn
     |> put_response_status(response)
     |> put_response_body(response)
+  end
+
+  defp decode_decodable_body(%Plug.Conn{} = conn, body) do
+    cond do
+      body == "" -> nil
+      json_body?(conn) -> Jason.decode!(body)
+      true -> body
+    end
   end
 
   defp put_response_status(conn, response) do
@@ -110,11 +109,9 @@ defmodule Moxinet.Plug.MockedResponse do
     end
   end
 
-  defp json_body?(%Plug.Conn{method: "POST"} = conn) do
-    {"content-type", "application/json"} in conn.req_headers
+  defp json_body?(%Plug.Conn{req_headers: req_headers}) do
+    {"content-type", "application/json"} in req_headers
   end
-
-  defp json_body?(_), do: false
 
   defp fail_and_send(conn, error_message) do
     conn

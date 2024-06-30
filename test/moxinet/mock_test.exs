@@ -4,13 +4,17 @@ defmodule Moxinet.MockTest do
 
   alias Moxinet.SignatureStorage
 
+  setup_all do
+    _ = SignatureStorage.start_link(name: SignatureStorage)
+
+    {:ok, signature_storage: SignatureStorage}
+  end
+
   describe "__using__/1" do
     test "builds a custom mock that allows custom expectations" do
       defmodule MyMock do
         use Moxinet.Mock
       end
-
-      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       conn =
         conn(:post, "/path")
@@ -26,8 +30,6 @@ defmodule Moxinet.MockTest do
       defmodule MyChildMock do
         use Moxinet.Mock
       end
-
-      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       :ok =
         MyChildMock.expect(
@@ -53,8 +55,6 @@ defmodule Moxinet.MockTest do
       defmodule MyFailingMock do
         use Moxinet.Mock
       end
-
-      {:ok, _pid} = SignatureStorage.start_link(name: SignatureStorage)
 
       conn =
         conn(:post, "/path")
