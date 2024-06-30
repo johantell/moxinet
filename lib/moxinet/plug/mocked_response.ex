@@ -71,17 +71,25 @@ defmodule Moxinet.Plug.MockedResponse do
     end
   end
 
-  defp apply_signature(conn, callback) when is_function(callback) do
+  defp apply_signature(%Plug.Conn{req_headers: request_headers} = conn, callback)
+       when is_function(callback) do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
 
     body = decode_decodable_body(conn, body)
 
-    response = callback.(body)
+    response =
+      case Function.info(callback, :arity) do
+        {:arity, 1} -> callback.(body)
+        {:arity, 2} -> callback.(body, Enum.reject(request_headers, &moxinet_header?/1))
+      end
 
     conn
     |> put_response_status(response)
     |> put_response_body(response)
   end
+
+  defp moxinet_header?({"x-moxinet-ref", _}), do: true
+  defp moxinet_header?(_), do: false
 
   defp decode_decodable_body(%Plug.Conn{} = conn, body) do
     cond do

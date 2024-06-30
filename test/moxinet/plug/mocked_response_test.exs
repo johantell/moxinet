@@ -125,5 +125,25 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       assert_receive {:payload, nil}
     end
+
+    test "recieves `body` and `headers` (excluding moxinet header) in a 2-arity callback function" do
+      test_pid = self()
+
+      conn =
+        conn(:post, "/path", "body")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+        |> put_req_header("accept", "text/plain")
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn body, headers ->
+        send(test_pid, {:body, body})
+        send(test_pid, {:headers, headers})
+        %{status: 200}
+      end)
+
+      MockedResponse.call(conn, @opts)
+
+      assert_receive {:body, "body"}
+      assert_receive {:headers, [{"accept", "text/plain"}]}
+    end
   end
 end
