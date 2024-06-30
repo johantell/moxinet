@@ -3,6 +3,7 @@ defmodule Moxinet.Plug.MockedResponse do
 
   import Plug.Conn
 
+  alias Moxinet.Response
   alias Moxinet.SignatureStorage
 
   def init(opts) do
@@ -88,9 +89,6 @@ defmodule Moxinet.Plug.MockedResponse do
     |> put_response_body(response)
   end
 
-  defp moxinet_header?({"x-moxinet-ref", _}), do: true
-  defp moxinet_header?(_), do: false
-
   defp decode_decodable_body(%Plug.Conn{} = conn, body) do
     cond do
       body == "" -> nil
@@ -99,13 +97,14 @@ defmodule Moxinet.Plug.MockedResponse do
     end
   end
 
-  defp put_response_status(conn, response) do
-    Plug.Conn.put_status(conn, Map.get(response, :status, 200))
+  defp moxinet_header?({"x-moxinet-ref", _}), do: true
+  defp moxinet_header?(_), do: false
+
+  defp put_response_status(%Plug.Conn{} = conn, %Response{status: status}) do
+    Plug.Conn.put_status(conn, status)
   end
 
-  defp put_response_body(conn, response) do
-    body = Map.get(response, :body, "")
-
+  defp put_response_body(%Plug.Conn{} = conn, %Response{body: body}) do
     case get_req_header(conn, "accept") do
       ["application/json" | _] ->
         conn

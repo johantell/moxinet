@@ -4,6 +4,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   alias Moxinet.Plug.MockedResponse
   alias Moxinet.SignatureStorage
+  alias Moxinet.Response
 
   @opts MockedResponse.init(scope: CustomAPIMock)
 
@@ -29,7 +30,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("accept", "application/json")
 
       SignatureStorage.store(CustomAPIMock, :get, "/path", fn _payload ->
-        %{status: 200, body: response_body}
+        %Response{status: 200, body: response_body}
       end)
 
       conn = MockedResponse.call(conn, @opts)
@@ -45,7 +46,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
 
       SignatureStorage.store(CustomAPIMock, :get, "/path?param=true", fn _payload ->
-        %{status: 200, body: "test=yes"}
+        %Response{status: 200, body: "test=yes"}
       end)
 
       assert %Plug.Conn{status: 200} = MockedResponse.call(conn, @opts)
@@ -60,7 +61,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       SignatureStorage.store(CustomAPIMock, :post, "/path", fn payload ->
         Kernel.send(test_pid, {:post_payload, payload})
-        %{status: 200, body: "test=yes"}
+        %Response{status: 200, body: "test=yes"}
       end)
 
       _conn = MockedResponse.call(conn, @opts)
@@ -101,7 +102,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("accept", "application/json")
 
       SignatureStorage.store(CustomAPIMock, :get, "/path", fn %{not_matched: true} ->
-        %{status: 200, body: %{success: true}}
+        %Response{status: 200, body: %{success: true}}
       end)
 
       assert_raise FunctionClauseError, fn ->
@@ -118,33 +119,12 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       SignatureStorage.store(CustomAPIMock, :post, "/path", fn payload ->
         send(test_pid, {:payload, payload})
-        %{status: 200}
+        %Response{status: 200}
       end)
 
       MockedResponse.call(conn, @opts)
 
       assert_receive {:payload, nil}
-    end
-
-    test "recieves `body` and `headers` (excluding moxinet header) in a 2-arity callback function" do
-      test_pid = self()
-
-      conn =
-        conn(:post, "/path", "body")
-        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
-        |> put_req_header("accept", "text/plain")
-
-      SignatureStorage.store(CustomAPIMock, :post, "/path", fn body, headers ->
-        send(test_pid, {:body, body})
-        send(test_pid, {:headers, headers})
-
-        %{status: 200}
-      end)
-
-      MockedResponse.call(conn, @opts)
-
-      assert_receive {:body, "body"}
-      assert_receive {:headers, [{"accept", "text/plain"}]}
     end
   end
 end

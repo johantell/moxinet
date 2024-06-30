@@ -3,6 +3,7 @@ defmodule Moxinet.MockTest do
   use Plug.Test
 
   alias Moxinet.SignatureStorage
+  alias Moxinet.Response
 
   setup_all do
     _ = SignatureStorage.start_link(name: SignatureStorage)
@@ -21,7 +22,12 @@ defmodule Moxinet.MockTest do
         |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
 
       :ok =
-        MyMock.expect(:post, "/path", fn _payload -> %{status: 499, body: "My body"} end, self())
+        MyMock.expect(
+          :post,
+          "/path",
+          fn _payload -> %Response{status: 499, body: "My body"} end,
+          self()
+        )
 
       assert %Plug.Conn{status: 499, resp_body: "My body"} = MyMock.call(conn, [])
     end
@@ -35,7 +41,7 @@ defmodule Moxinet.MockTest do
         MyChildMock.expect(
           :post,
           "/path",
-          fn _payload -> %{status: 499, body: "My body"} end,
+          fn _payload -> %Response{status: 499, body: "My body"} end,
           self()
         )
 

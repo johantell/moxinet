@@ -21,6 +21,9 @@ defmodule Moxinet do
     - `name`: Name of the moxinet supervisor. Defaults to `Moxinet`
 
   """
+
+  alias Moxinet.Response
+
   @spec start(Keyword.t()) :: {:ok, pid} | {:error, atom()}
   defdelegate start(opts), to: Moxinet.Application
 
@@ -54,7 +57,13 @@ defmodule Moxinet do
   Mocks a call for the passed module when used from a certain pid, defaulting `self()`
   """
   @type http_method :: :get | :post | :patch | :put | :delete | :options
-  @spec expect(module(), http_method, binary(), function(), pid) :: :ok
+  @type request_body :: String.t()
+  @type decoded_json_request_body :: %{String.t() => any()} | [any()]
+  @type header :: {String.t(), String.t()}
+  @type mock_function ::
+          (request_body() | decoded_json_request_body() -> Response.t())
+          | (request_body() | decoded_json_request_body(), [header()] -> Response.t())
+  @spec expect(module(), http_method, binary(), mock_function(), pid) :: :ok
   defdelegate expect(module, http_method, path, callback, from_pid \\ self()),
     to: Moxinet.SignatureStorage,
     as: :store
