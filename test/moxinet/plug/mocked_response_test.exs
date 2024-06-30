@@ -137,6 +137,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
       SignatureStorage.store(CustomAPIMock, :post, "/path", fn body, headers ->
         send(test_pid, {:body, body})
         send(test_pid, {:headers, headers})
+
         %{status: 200}
       end)
 
