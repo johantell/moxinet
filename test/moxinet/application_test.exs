@@ -2,7 +2,6 @@ defmodule Moxinet.ApplicationTest do
   use ExUnit.Case, async: true
 
   alias Moxinet.Application
-  alias Moxinet.SignatureStorage
 
   import ExUnit.CaptureLog
 
@@ -16,10 +15,13 @@ defmodule Moxinet.ApplicationTest do
         end
       end
 
-      {{:ok, pid}, logged} = with_log(fn -> Application.start(router: MyServer, port: 4567) end)
+      {{:ok, pid}, logged} =
+        with_log(fn ->
+          Application.start(router: MyServer, port: 4567, signature_storage: MySignatureStorage)
+        end)
 
       assert Process.alive?(pid)
-      assert SignatureStorage |> Process.whereis() |> Process.alive?()
+      assert MySignatureStorage |> Process.whereis() |> Process.alive?()
       assert logged =~ "at 0.0.0.0:4567 (http)"
     end
   end
