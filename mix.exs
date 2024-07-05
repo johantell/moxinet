@@ -11,6 +11,7 @@ defmodule Moxinet.MixProject do
       elixir: "~> 1.15",
       start_permanent: false,
       deps: deps(),
+      aliases: aliases(),
       docs: [
         main: "readme",
         extras: ["README.md"],
@@ -80,5 +81,11 @@ defmodule Moxinet.MixProject do
       "Github" => "https://github.com/johantell/moxinet",
       "HexDocs" => "https://hexdocs.pm/moxinet"
     }
+  end
+
+  defp aliases do
+    [
+      ci: ["format --check-formatted", "credo", "dialyzer"]
+    ]
   end
 end
