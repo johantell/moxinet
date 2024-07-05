@@ -126,5 +126,25 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       assert_receive {:payload, nil}
     end
+
+    test "filters out the `x-moxinet-header` from callback with headers" do
+      test_pid = self()
+
+      conn =
+        conn(:post, "/path", "")
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+        |> put_req_header("x-special-header", "something")
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload, headers ->
+        send(test_pid, {:headers, headers})
+        %Response{status: 200}
+      end)
+
+      MockedResponse.call(conn, @opts)
+
+      assert_receive {:headers,
+                      [{"accept", "application/json"}, {"x-special-header", "something"}]}
+    end
   end
 end
