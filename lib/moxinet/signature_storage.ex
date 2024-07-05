@@ -33,8 +33,6 @@ defmodule Moxinet.SignatureStorage do
       path: path
     }
 
-    Process.monitor(from_pid)
-
     ref = %Mock{
       callback: callback,
       owner: from_pid,
@@ -56,7 +54,9 @@ defmodule Moxinet.SignatureStorage do
     GenServer.call(pid, {:find_signature, signature})
   end
 
-  def handle_call({:store, %Signature{} = signature, callback}, _from, state) do
+  def handle_call({:store, %Signature{} = signature, callback}, {from_pid, _ref} = _from, state) do
+    Process.monitor(from_pid)
+
     {:reply, :ok, Map.put(state, signature, callback)}
   end
 
@@ -74,5 +74,15 @@ defmodule Moxinet.SignatureStorage do
       end
 
     {:reply, response, state}
+  end
+
+  def handle_info({:DOWN, _ref, :process, test_pid, reason}, state)
+      when reason in [:normal, :shutdown] do
+    state =
+      state
+      |> Enum.reject(fn {_signature, mock} -> mock.owner == test_pid end)
+      |> Map.new()
+
+    {:noreply, state}
   end
 end

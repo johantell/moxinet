@@ -24,6 +24,28 @@ defmodule Moxinet.SignatureStorageTest do
                } => %SignatureStorage.Mock{callback: ^callback}
              } = :sys.get_state(storage_pid)
     end
+
+    test "adds a monitor to remove signatures when process dies" do
+      {:ok, storage_pid} = SignatureStorage.start_link([])
+
+      {pid, reference} =
+        spawn_monitor(fn ->
+          SignatureStorage.store(
+            __MODULE__,
+            :post,
+            "/",
+            fn _ -> :ok end,
+            self(),
+            storage_pid
+          )
+
+          assert 1 == :sys.get_state(storage_pid) |> Enum.count()
+        end)
+
+      assert_receive {:DOWN, ^reference, :process, ^pid, :normal}
+      assert false == Process.alive?(pid)
+      assert 0 == :sys.get_state(storage_pid) |> Enum.count()
+    end
   end
 
   describe "find_signature/3" do
