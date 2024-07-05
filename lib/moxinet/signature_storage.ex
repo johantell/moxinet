@@ -3,10 +3,19 @@ defmodule Moxinet.SignatureStorage do
 
   use GenServer
 
+  alias Moxinet.SignatureStorage.State
+
   import Moxinet, only: [pid_reference: 1]
 
   defmodule Signature do
     @moduledoc false
+
+    @type t :: %__MODULE__{
+            mock_module: module(),
+            pid: pid(),
+            method: :get | :post | :put | :patch | :options,
+            path: String.t()
+          }
 
     defstruct [:mock_module, :pid, :method, :path]
   end
@@ -14,11 +23,18 @@ defmodule Moxinet.SignatureStorage do
   defmodule Mock do
     @moduledoc false
 
+    @type t :: %__MODULE__{
+            owner: pid(),
+            callback: function(),
+            usage_limit: pos_integer(),
+            used: non_neg_integer()
+          }
+
     defstruct [:owner, :callback, :usage_limit, :used]
   end
 
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, %{}, opts)
+    GenServer.start_link(__MODULE__, %State{}, opts)
   end
 
   def init(args) do
@@ -55,23 +71,16 @@ defmodule Moxinet.SignatureStorage do
   end
 
   def handle_call({:store, %Signature{} = signature, callback}, {from_pid, _ref} = _from, state) do
-    Process.monitor(from_pid)
+    state =
+      state
+      |> State.put_signature(signature, callback)
+      |> State.put_monitor(from_pid)
 
-    {:reply, :ok, Map.put(state, signature, callback)}
+    {:reply, :ok, state}
   end
 
   def handle_call({:find_signature, signature}, _from, state) do
-    {response, state} =
-      case Map.get(state, signature, :not_found) do
-        %Mock{used: used, usage_limit: usage_limit} = mock when used < usage_limit ->
-          {{:ok, mock.callback}, Map.put(state, signature, %{mock | used: used + 1})}
-
-        %Mock{used: used, usage_limit: usage_limit} when used >= usage_limit ->
-          {{:error, :exceeds_usage_limit}, state}
-
-        :not_found ->
-          {{:error, :not_found}, state}
-      end
+    {response, state} = State.get_signature(state, signature)
 
     {:reply, response, state}
   end
@@ -80,8 +89,8 @@ defmodule Moxinet.SignatureStorage do
       when reason in [:normal, :shutdown] do
     state =
       state
-      |> Enum.reject(fn {_signature, mock} -> mock.owner == test_pid end)
-      |> Map.new()
+      |> State.remove_monitor(test_pid)
+      |> State.remove_signatures_for_pid(test_pid)
 
     {:noreply, state}
   end

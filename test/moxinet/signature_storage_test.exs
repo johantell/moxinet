@@ -16,12 +16,14 @@ defmodule Moxinet.SignatureStorageTest do
                SignatureStorage.store(__MODULE__, method, path, callback, test_pid, storage_pid)
 
       assert %{
-               %SignatureStorage.Signature{
-                 mock_module: __MODULE__,
-                 pid: ^pid_reference,
-                 method: "POST",
-                 path: ^path
-               } => %SignatureStorage.Mock{callback: ^callback}
+               signatures: %{
+                 %SignatureStorage.Signature{
+                   mock_module: __MODULE__,
+                   pid: ^pid_reference,
+                   method: "POST",
+                   path: ^path
+                 } => %SignatureStorage.Mock{callback: ^callback}
+               }
              } = :sys.get_state(storage_pid)
     end
 
@@ -39,12 +41,12 @@ defmodule Moxinet.SignatureStorageTest do
             storage_pid
           )
 
-          assert 1 == :sys.get_state(storage_pid) |> Enum.count()
+          assert 1 == :sys.get_state(storage_pid) |> Map.get(:signatures) |> Enum.count()
         end)
 
       assert_receive {:DOWN, ^reference, :process, ^pid, :normal}
       assert false == Process.alive?(pid)
-      assert 0 == :sys.get_state(storage_pid) |> Enum.count()
+      assert 0 == :sys.get_state(storage_pid) |> Map.get(:signatures) |> Enum.count()
     end
   end
 
