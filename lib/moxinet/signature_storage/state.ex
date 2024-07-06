@@ -57,4 +57,11 @@ defmodule Moxinet.SignatureStorage.State do
   def remove_monitor(%__MODULE__{monitors: monitors} = state, monitored_pid) do
     %{state | monitors: Map.drop(monitors, [monitored_pid])}
   end
+
+  def unused_signatures(%__MODULE__{signatures: signatures}, test_pid) do
+    Enum.filter(signatures, fn
+      {_signature, %Mock{owner: ^test_pid, used: times_used}} when times_used == 0 -> true
+      {_signature, _mock} -> false
+    end)
+  end
 end

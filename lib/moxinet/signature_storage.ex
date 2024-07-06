@@ -70,6 +70,16 @@ defmodule Moxinet.SignatureStorage do
     GenServer.call(pid, {:find_signature, signature})
   end
 
+  def verify_usage!(test_pid, pid \\ __MODULE__) do
+    case GenServer.call(pid, {:unused_signatures, test_pid}) do
+      [] ->
+        :ok
+
+      signatures ->
+        raise Moxinet.UnusedExpectationsError, test_pid: test_pid, signatures: signatures
+    end
+  end
+
   def handle_call({:store, %Signature{} = signature, callback}, {from_pid, _ref} = _from, state) do
     state =
       state
@@ -83,6 +93,10 @@ defmodule Moxinet.SignatureStorage do
     {response, state} = State.get_signature(state, signature)
 
     {:reply, response, state}
+  end
+
+  def handle_call({:unused_signatures, test_pid}, _from, state) do
+    {:reply, State.unused_signatures(state, test_pid), state}
   end
 
   def handle_info({:DOWN, _ref, :process, test_pid, reason}, state)
