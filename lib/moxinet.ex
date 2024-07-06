@@ -67,4 +67,17 @@ defmodule Moxinet do
   defdelegate expect(module, http_method, path, callback, from_pid \\ self()),
     to: Moxinet.SignatureStorage,
     as: :store
+
+  @doc """
+  Verifies that all defined expectations have been called to prevent tests from
+  defining expectations that aren't used. Recommended usage is to set it up in
+  your test setup:
+
+  ```elixir
+  setup :verify_usage!    
+  ```
+  """
+  @spec verify_usage!(pid()) :: :ok | no_return()
+  defdelegate verify_usage!(test_pid, storage_pid \\ Moxinet.SignatureStorage),
+    to: Moxinet.SignatureStorage
 end
