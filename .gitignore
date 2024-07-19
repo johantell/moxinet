@@ -24,3 +24,6 @@ moxinet-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Mac OS artifacts
+.DS_Store
