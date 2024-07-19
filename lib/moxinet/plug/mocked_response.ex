@@ -79,10 +79,9 @@ defmodule Moxinet.Plug.MockedResponse do
     body = decode_decodable_body(conn, body)
 
     response =
-      case Function.info(callback, :arity) do
-        {:arity, 1} -> callback.(body)
-        {:arity, 2} -> callback.(body, Enum.reject(request_headers, &moxinet_header?/1))
-      end
+      callback
+      |> run_callback(body, request_headers)
+      |> validate_response!()
 
     conn
     |> put_response_status(response)
@@ -97,8 +96,26 @@ defmodule Moxinet.Plug.MockedResponse do
     end
   end
 
+  defp run_callback(callback, body, _request_headers) when is_function(callback, 1) do
+    callback.(body)
+  end
+
+  defp run_callback(callback, body, request_headers) when is_function(callback, 2) do
+    request_headers = Enum.reject(request_headers, &moxinet_header?/1)
+
+    callback.(body, request_headers)
+  end
+
   defp moxinet_header?({"x-moxinet-ref", _}), do: true
   defp moxinet_header?(_), do: false
+
+  defp validate_response!(%Response{} = response), do: response
+
+  defp validate_response!(invalid_response) do
+    raise ArgumentError, String.trim("""
+      Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `#{inspect(invalid_response)}`
+    """)
+  end
 
   defp put_response_status(%Plug.Conn{} = conn, %Response{status: status}) do
     Plug.Conn.put_status(conn, status)

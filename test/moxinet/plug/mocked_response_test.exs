@@ -146,5 +146,22 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert_receive {:headers,
                       [{"accept", "application/json"}, {"x-special-header", "something"}]}
     end
+
+    test "raises when callback returns something else than a `%Response{}`" do
+      conn =
+        put_req_header(
+          conn(:post, "/path", ""),
+          "x-moxinet-ref",
+          Moxinet.pid_reference(self())
+        )
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload ->
+        %{status: 200}
+      end)
+
+      assert_raise ArgumentError, "Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `%{status: 200}`", fn ->
+        MockedResponse.call(conn, @opts)
+      end
+    end
   end
 end
