@@ -27,6 +27,9 @@ defmodule Moxinet.Plug.MockedResponse do
       {:error, :missing_pid_reference} ->
         fail_and_send(conn, "Invalid reference was found in the `x-moxinet-ref` header.")
 
+      {:error, :exceeds_usage_limit} ->
+        fail_and_send(conn, "The mocked callback may not be used more than once.")
+
       {:error, :not_found} ->
         fail_and_send(
           conn,
@@ -112,9 +115,10 @@ defmodule Moxinet.Plug.MockedResponse do
   defp validate_response!(%Response{} = response), do: response
 
   defp validate_response!(invalid_response) do
-    raise ArgumentError, String.trim("""
-      Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `#{inspect(invalid_response)}`
-    """)
+    raise ArgumentError,
+          String.trim("""
+            Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `#{inspect(invalid_response)}`
+          """)
   end
 
   defp put_response_status(%Plug.Conn{} = conn, %Response{status: status}) do

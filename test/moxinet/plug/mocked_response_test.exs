@@ -159,9 +159,11 @@ defmodule Moxinet.Plug.MockedResponseTest do
         %{status: 200}
       end)
 
-      assert_raise ArgumentError, "Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `%{status: 200}`", fn ->
-        MockedResponse.call(conn, @opts)
-      end
+      assert_raise ArgumentError,
+                   "Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `%{status: 200}`",
+                   fn ->
+                     MockedResponse.call(conn, @opts)
+                   end
     end
   end
 end

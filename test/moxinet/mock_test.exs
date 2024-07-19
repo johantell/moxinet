@@ -71,5 +71,33 @@ defmodule Moxinet.MockTest do
                resp_body: "No registered mock was found for the registered pid." <> _
              } = MyFailingMock.call(conn, [])
     end
+
+    test "gives a 500 response when an expectation is used multiple times" do
+      defmodule MyDoubleCallMock do
+        use Moxinet.Mock
+      end
+
+      :ok =
+        MyDoubleCallMock.expect(
+          :post,
+          "/path",
+          fn _payload -> %Response{status: 200, body: "ok"} end,
+          self()
+        )
+
+      conn =
+        conn(:post, "/path")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+
+      assert %{
+               status: 200,
+               resp_body: "ok"
+             } = MyDoubleCallMock.call(conn, [])
+
+      assert %{
+               status: 500,
+               resp_body: "The mocked callback may not be used more than once."
+             } = MyDoubleCallMock.call(conn, [])
+    end
   end
 end
