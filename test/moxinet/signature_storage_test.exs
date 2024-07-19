@@ -41,12 +41,12 @@ defmodule Moxinet.SignatureStorageTest do
             storage_pid
           )
 
-          assert 1 == :sys.get_state(storage_pid) |> Map.get(:signatures) |> Enum.count()
+          assert 1 == Enum.count(:sys.get_state(storage_pid).signatures)
         end)
 
       assert_receive {:DOWN, ^reference, :process, ^pid, :normal}
       assert false == Process.alive?(pid)
-      assert 0 == :sys.get_state(storage_pid) |> Map.get(:signatures) |> Enum.count()
+      assert true == Enum.empty?(:sys.get_state(storage_pid).signatures)
     end
   end
 
