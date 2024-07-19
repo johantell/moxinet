@@ -31,22 +31,8 @@ defmodule Moxinet.Plug.MockedResponse do
         fail_and_send(conn, "The mocked callback may not be used more than once.")
 
       {:error, :not_found} ->
-        fail_and_send(
-          conn,
-          """
-          No registered mock was found for the registered pid.
-
-          #{format_error_details(conn)}
-          """
-        )
+        fail_and_send(conn, "No registered mock was found for the registered pid.")
     end
-  end
-
-  defp format_error_details(conn) do
-    """
-    method: #{conn.method}
-    path: #{build_path(conn)}
-    """
   end
 
   defp build_path(%Plug.Conn{path_info: path_info, query_string: query_string}) do
@@ -141,9 +127,18 @@ defmodule Moxinet.Plug.MockedResponse do
     {"content-type", "application/json"} in req_headers
   end
 
-  defp fail_and_send(conn, error_message) do
+  defp fail_and_send(conn, error_string) do
+    error_message = error_string <> "\n\n" <> format_error_details(conn)
+
     conn
     |> send_resp(500, error_message)
     |> halt()
+  end
+
+  defp format_error_details(conn) do
+    """
+    method: #{conn.method}
+    path: #{build_path(conn)}
+    """
   end
 end

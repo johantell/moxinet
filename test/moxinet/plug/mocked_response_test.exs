@@ -79,7 +79,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       assert :sent == conn.state
       assert 500 == conn.status
-      assert conn.resp_body == "Invalid reference was found in the `x-moxinet-ref` header."
+      assert "Invalid reference was found in the `x-moxinet-ref` header." <> _ = conn.resp_body
     end
 
     test "responds with a 500-error with a detailed body when no signatures matched" do

@@ -96,7 +96,7 @@ defmodule Moxinet.MockTest do
 
       assert %{
                status: 500,
-               resp_body: "The mocked callback may not be used more than once."
+               resp_body: "The mocked callback may not be used more than once." <> _
              } = MyDoubleCallMock.call(conn, [])
     end
   end
