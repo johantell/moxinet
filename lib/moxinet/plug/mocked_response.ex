@@ -6,13 +6,17 @@ defmodule Moxinet.Plug.MockedResponse do
   alias Moxinet.Response
   alias Moxinet.SignatureStorage
 
+  @type plug_options :: Keyword.t()
+
+  @spec init(plug_options()) :: plug_options()
   def init(opts) do
     opts
   end
 
+  @spec call(Plug.Conn.t(), plug_options()) :: Plug.Conn.t()
   def call(conn, scope: scope) do
     with {:ok, pid} <- get_pid_reference(conn),
-         {:ok, signature} <-
+         {:ok, mock_function} <-
            SignatureStorage.find_signature(
              scope,
              pid,
@@ -20,7 +24,7 @@ defmodule Moxinet.Plug.MockedResponse do
              build_path(conn)
            ) do
       conn
-      |> apply_signature(signature)
+      |> apply_signature(mock_function)
       |> send_resp()
       |> halt()
     else
@@ -43,14 +47,15 @@ defmodule Moxinet.Plug.MockedResponse do
     |> URI.to_string()
   end
 
-  def append_uri_query(%URI{} = uri, query) when is_binary(query) and query !== "" do
+  defp append_uri_query(%URI{} = uri, query) when is_binary(query) and query !== "" do
     URI.append_query(uri, query)
   end
 
-  def append_uri_query(%URI{} = uri, _query) do
+  defp append_uri_query(%URI{} = uri, _query) do
     uri
   end
 
+  @spec get_pid_reference(Plug.Conn.t()) :: {:ok, pid()} | {:error, :missing_pid_reference}
   defp get_pid_reference(%Plug.Conn{} = conn) do
     with [pid_reference] <- get_req_header(conn, "x-moxinet-ref"),
          {:ok, pid_binary} <- Base.decode64(pid_reference),
@@ -61,6 +66,7 @@ defmodule Moxinet.Plug.MockedResponse do
     end
   end
 
+  @spec apply_signature(Plug.Conn.t(), SignatureStorage.Mock.callback()) :: Plug.Conn.t()
   defp apply_signature(%Plug.Conn{req_headers: request_headers} = conn, callback)
        when is_function(callback) do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
@@ -98,7 +104,7 @@ defmodule Moxinet.Plug.MockedResponse do
   defp moxinet_header?({"x-moxinet-ref", _}), do: true
   defp moxinet_header?(_), do: false
 
-  defp validate_response!(%Response{} = response), do: response
+  defp validate_response!(response) when is_struct(response, Response), do: response
 
   defp validate_response!(invalid_response) do
     raise ArgumentError,

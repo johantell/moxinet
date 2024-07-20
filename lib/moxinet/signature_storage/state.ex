@@ -11,6 +11,9 @@ defmodule Moxinet.SignatureStorage.State do
 
   defstruct signatures: %{}, monitors: %{}
 
+  @spec get_signature(t(), Signature.t()) ::
+          {{:ok, Mock.callback()}, t()}
+          | {{:error, :exceeds_usage_limit | :not_found}, t()}
   def get_signature(%__MODULE__{signatures: signatures} = state, signature) do
     {response, signatures} =
       case Map.get(signatures, signature, :not_found) do
@@ -28,10 +31,12 @@ defmodule Moxinet.SignatureStorage.State do
     {response, %{state | signatures: signatures}}
   end
 
+  @spec put_signature(t(), Signature.t(), Mock.t()) :: t()
   def put_signature(%__MODULE__{signatures: signatures} = state, signature, mock) do
     %{state | signatures: Map.put(signatures, signature, mock)}
   end
 
+  @spec remove_signatures_for_pid(t(), pid()) :: t()
   def remove_signatures_for_pid(%__MODULE__{signatures: signatures} = state, test_pid) do
     signatures =
       signatures
@@ -41,6 +46,7 @@ defmodule Moxinet.SignatureStorage.State do
     %{state | signatures: signatures}
   end
 
+  @spec put_monitor(t(), pid()) :: t()
   def put_monitor(%__MODULE__{monitors: monitors} = state, from_pid) do
     monitors =
       case monitors do
@@ -54,6 +60,7 @@ defmodule Moxinet.SignatureStorage.State do
     %{state | monitors: monitors}
   end
 
+  @spec remove_monitor(t(), pid()) :: t()
   def remove_monitor(%__MODULE__{monitors: monitors} = state, monitored_pid) do
     %{state | monitors: Map.drop(monitors, [monitored_pid])}
   end

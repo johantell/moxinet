@@ -3,44 +3,30 @@ defmodule Moxinet.SignatureStorage do
 
   use GenServer
 
+  alias Moxinet.SignatureStorage.Mock
+  alias Moxinet.SignatureStorage.Signature
   alias Moxinet.SignatureStorage.State
 
   import Moxinet, only: [pid_reference: 1]
 
-  defmodule Signature do
-    @moduledoc false
-
-    @type t :: %__MODULE__{
-            mock_module: module(),
-            pid: pid(),
-            method: :get | :post | :put | :patch | :options,
-            path: String.t()
-          }
-
-    defstruct [:mock_module, :pid, :method, :path]
-  end
-
-  defmodule Mock do
-    @moduledoc false
-
-    @type t :: %__MODULE__{
-            owner: pid(),
-            callback: function(),
-            usage_limit: pos_integer(),
-            used: non_neg_integer()
-          }
-
-    defstruct [:owner, :callback, :usage_limit, :used]
-  end
-
+  @spec start_link(Keyword.t()) :: {:ok, pid()}
   def start_link(opts) do
     GenServer.start_link(__MODULE__, %State{}, opts)
   end
 
+  @impl GenServer
   def init(args) do
     {:ok, args}
   end
 
+  @spec store(
+          module(),
+          Moxinet.http_method(),
+          binary(),
+          Mock.callback(),
+          pid(),
+          pid() | module()
+        ) :: :ok
   def store(scope, method, path, callback, from_pid \\ self(), pid \\ __MODULE__) do
     signature = %Signature{
       mock_module: scope,
@@ -59,6 +45,8 @@ defmodule Moxinet.SignatureStorage do
     GenServer.call(pid, {:store, signature, ref})
   end
 
+  @spec find_signature(module(), pid(), Moxinet.http_method(), binary(), pid() | module()) ::
+          {:ok, Mock.callback()} | {:error, :exceeds_usage_limit | :not_found}
   def find_signature(scope, from_pid, method, path, pid \\ __MODULE__) do
     signature = %Signature{
       mock_module: scope,
@@ -67,9 +55,13 @@ defmodule Moxinet.SignatureStorage do
       path: path
     }
 
-    GenServer.call(pid, {:find_signature, signature})
+    case GenServer.call(pid, {:find_signature, signature}) do
+      {:ok, mock_callback} -> {:ok, mock_callback}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
+  @impl GenServer
   def handle_call({:store, %Signature{} = signature, callback}, {from_pid, _ref} = _from, state) do
     state =
       state
@@ -79,12 +71,14 @@ defmodule Moxinet.SignatureStorage do
     {:reply, :ok, state}
   end
 
+  @impl GenServer
   def handle_call({:find_signature, signature}, _from, state) do
     {response, state} = State.get_signature(state, signature)
 
     {:reply, response, state}
   end
 
+  @impl GenServer
   def handle_info({:DOWN, _ref, :process, test_pid, reason}, state)
       when reason in [:normal, :shutdown] do
     state =
