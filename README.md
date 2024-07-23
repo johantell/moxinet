@@ -33,6 +33,14 @@ defmodule MockServer do
 end
 ```
 
+Then create the mock module (in this example `GithubMock`):
+
+```elixir
+defmodule GithubMock do
+  use Moxinet.Mock
+end
+```
+
 Start `moxinet` in `test_helper.exs` (before `ExUnit.start()`)
 ```elixir
 {:ok, _} = Moxinet.start()
