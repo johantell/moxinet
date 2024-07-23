@@ -26,7 +26,7 @@ mock-specific requests:
 ```elixir
 # test/support/mock_server.ex
 
-defmodule MockServer do
+defmodule MyApp.MockServer do
   use Moxinet.Server
 
   forward("/github", to: GithubMock)
@@ -43,7 +43,7 @@ end
 
 Start `moxinet` in `test_helper.exs` (before `ExUnit.start()`)
 ```elixir
-{:ok, _} = Moxinet.start()
+{:ok, _} = Moxinet.start(port: 4040, router: MyApp.MockServer)
 
 ExUnit.start()
 ```
