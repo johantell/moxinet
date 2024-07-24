@@ -36,19 +36,22 @@ end
 Then create the mock module (in this example `GithubMock`):
 
 ```elixir
+# test/support/mock_servers/github_mock.ex
+
 defmodule GithubMock do
   use Moxinet.Mock
 end
 ```
 
-Start `moxinet` in `test_helper.exs` (before `ExUnit.start()`)
+Start `moxinet` in your test helper (before `ExUnit.start()`)
 ```elixir
+# test/test_helper.exs
 {:ok, _} = Moxinet.start(port: 4040, router: MyApp.MockServer)
 
 ExUnit.start()
 ```
 
-Let the configuration decide whether the API should call the remote server or the local mock server:
+Let the API configuration decide whether the API should call the remote server or the local mock server:
 
 ```elixir
 # config/config.exs
