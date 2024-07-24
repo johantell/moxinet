@@ -165,5 +165,24 @@ defmodule Moxinet.Plug.MockedResponseTest do
                      MockedResponse.call(conn, @opts)
                    end
     end
+
+    test "treats a non-string response body as JSON if no accept header is given" do
+      conn =
+        put_req_header(
+          conn(:post, "/path", ""),
+          "x-moxinet-ref",
+          Moxinet.pid_reference(self())
+        )
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload ->
+        %Response{status: 200, body: %{status: :ok}}
+      end)
+
+      conn = MockedResponse.call(conn, @opts)
+
+      assert 200 == conn.status
+      assert {"content-type", "application/json; charset=utf-8"} in conn.resp_headers
+      assert ~s({"status":"ok"}) == conn.resp_body
+    end
   end
 end

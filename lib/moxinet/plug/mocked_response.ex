@@ -118,14 +118,19 @@ defmodule Moxinet.Plug.MockedResponse do
   end
 
   defp put_response_body(%Plug.Conn{} = conn, %Response{body: body}) do
-    case get_req_header(conn, "accept") do
-      ["application/json" | _] ->
+    cond do
+      match?(["application/json" | _], get_req_header(conn, "accept")) ->
         conn
         |> put_resp_content_type("application/json")
         |> resp(conn.status, Jason.encode!(body))
 
-      _ ->
-        resp(conn, conn.status, to_string(body))
+      is_binary(body) ->
+        resp(conn, conn.status, body)
+
+      true ->
+        conn
+        |> put_resp_content_type("application/json")
+        |> resp(conn.status, Jason.encode!(body))
     end
   end
 
