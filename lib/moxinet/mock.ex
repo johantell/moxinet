@@ -46,8 +46,8 @@ defmodule Moxinet.Mock do
 
       unquote(not_found_matcher())
 
-      def expect(http_method, path, callback, from_pid \\ self()) do
-        Moxinet.expect(__MODULE__, http_method, path, callback, from_pid)
+      def expect(http_method, path, callback, options \\ []) do
+        Moxinet.expect(__MODULE__, http_method, path, callback, options)
       end
     end
   end

@@ -26,7 +26,7 @@ defmodule Moxinet.MockTest do
           :post,
           "/path",
           fn _payload -> %Response{status: 499, body: "My body"} end,
-          self()
+          pid: self()
         )
 
       assert %Plug.Conn{status: 499, resp_body: "My body"} = MyMock.call(conn, [])
@@ -42,7 +42,7 @@ defmodule Moxinet.MockTest do
           :post,
           "/path",
           fn _payload -> %Response{status: 499, body: "My body"} end,
-          self()
+          pid: self()
         )
 
       task =
@@ -82,7 +82,7 @@ defmodule Moxinet.MockTest do
           :post,
           "/path",
           fn _payload -> %Response{status: 200, body: "ok"} end,
-          self()
+          pid: self()
         )
 
       conn =
