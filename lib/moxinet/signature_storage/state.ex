@@ -5,7 +5,7 @@ defmodule Moxinet.SignatureStorage.State do
   alias Moxinet.SignatureStorage.Signature
 
   @type t :: %__MODULE__{
-          signatures: %{Signature.t() => Mock.t()},
+          signatures: %{Signature.t() => [Mock.t()]},
           monitors: %{pid() => pid()}
         }
 
@@ -15,32 +15,45 @@ defmodule Moxinet.SignatureStorage.State do
           {{:ok, Mock.callback()}, t()}
           | {{:error, :exceeds_usage_limit | :not_found}, t()}
   def get_signature(%__MODULE__{signatures: signatures} = state, signature) do
-    {response, signatures} =
-      case Map.get(signatures, signature, :not_found) do
-        %Mock{used: used, usage_limit: usage_limit} = mock when used < usage_limit ->
-          signatures = Map.put(signatures, signature, %{mock | used: used + 1})
-          {{:ok, mock.callback}, signatures}
+    {response, reversed_signatures} =
+      signatures
+      |> Map.get(signature, [])
+      |> Enum.reduce({{:error, :not_found}, []}, fn
+        mock, {{:ok, _callback} = matched_mock, mocks} ->
+          {matched_mock, [mock | mocks]}
 
-        %Mock{used: used, usage_limit: usage_limit} when used >= usage_limit ->
-          {{:error, :exceeds_usage_limit}, signatures}
+        %Mock{usage_limit: usage_limit, used: used} = mock, {{:error, _}, mocks}
+        when used < usage_limit ->
+          mock = %{mock | used: used + 1}
+          {{:ok, mock.callback}, [mock | mocks]}
 
-        :not_found ->
-          {{:error, :not_found}, signatures}
-      end
+        %Mock{usage_limit: usage_limit, used: used} = mock, {{:error, _}, mocks}
+        when used >= usage_limit ->
+          mock = %{mock | used: used + 1}
+          {{:error, :exceeds_usage_limit}, [mock | mocks]}
 
-    {response, %{state | signatures: signatures}}
+        mock, {response, mocks} ->
+          {response, [mock | mocks]}
+      end)
+
+    updated_signatures = Map.put(signatures, signature, Enum.reverse(reversed_signatures))
+
+    {response, %{state | signatures: updated_signatures}}
   end
 
   @spec put_signature(t(), Signature.t(), Mock.t()) :: t()
   def put_signature(%__MODULE__{signatures: signatures} = state, signature, mock) do
-    %{state | signatures: Map.put(signatures, signature, mock)}
+    %{state | signatures: Map.update(signatures, signature, [mock], &(&1 ++ [mock]))}
   end
 
   @spec remove_signatures_for_pid(t(), pid()) :: t()
   def remove_signatures_for_pid(%__MODULE__{signatures: signatures} = state, test_pid) do
     signatures =
       signatures
-      |> Enum.reject(fn {_signature, mock} -> mock.owner == test_pid end)
+      |> Enum.map(fn {signature, mocks} ->
+        {signature, Enum.reject(mocks, &(&1.owner == test_pid))}
+      end)
+      |> Enum.reject(fn {_signature, mocks} -> Enum.empty?(mocks) end)
       |> Map.new()
 
     %{state | signatures: signatures}

@@ -25,7 +25,7 @@ defmodule Moxinet.SignatureStorageTest do
                    pid: ^pid_reference,
                    method: "POST",
                    path: ^path
-                 } => %SignatureStorage.Mock{callback: ^callback}
+                 } => [%SignatureStorage.Mock{callback: ^callback}]
                }
              } = :sys.get_state(storage_pid)
     end
@@ -153,6 +153,40 @@ defmodule Moxinet.SignatureStorageTest do
                SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
 
       assert {:ok, ^callback} =
+               SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
+
+      assert {:error, :exceeds_usage_limit} =
+               SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
+    end
+
+    test "cycles to the next matching mock when a usage limit is exceeded" do
+      {:ok, storage_pid} = SignatureStorage.start_link([])
+      method = :post
+      test_pid = self()
+      path = "/my-path"
+      callback_1 = fn _, _ -> {:ok, []} end
+      callback_2 = fn _, _ -> {:ok, []} end
+
+      :ok =
+        SignatureStorage.store(__MODULE__, method, path, callback_1,
+          pid: test_pid,
+          storage: storage_pid,
+          times: 2
+        )
+
+      :ok =
+        SignatureStorage.store(__MODULE__, method, path, callback_2,
+          pid: test_pid,
+          storage: storage_pid
+        )
+
+      assert {:ok, ^callback_1} =
+               SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
+
+      assert {:ok, ^callback_1} =
+               SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
+
+      assert {:ok, ^callback_2} =
                SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
 
       assert {:error, :exceeds_usage_limit} =
