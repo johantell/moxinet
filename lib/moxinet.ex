@@ -58,6 +58,7 @@ defmodule Moxinet do
 
   * `pid`: The source pid that the mock will be applied for. Defaults to `self()`
   * `times`: The amount of times the mock signature may be used. Defaults to `1`
+  * `storage`: The signature storage to be used. Defaults to `Moxinet.SignatureStorage`
 
   ## Examples:
 
