@@ -18,27 +18,28 @@ defmodule Moxinet.SignatureStorage.State do
     {response, reversed_signatures} =
       signatures
       |> Map.get(signature, [])
-      |> Enum.reduce({{:error, :not_found}, []}, fn
-        mock, {{:ok, _callback} = matched_mock, mocks} ->
-          {matched_mock, [mock | mocks]}
-
-        %Mock{usage_limit: usage_limit, used: used} = mock, {{:error, _}, mocks}
-        when used < usage_limit ->
-          mock = %{mock | used: used + 1}
-          {{:ok, mock.callback}, [mock | mocks]}
-
-        %Mock{usage_limit: usage_limit, used: used} = mock, {{:error, _}, mocks}
-        when used >= usage_limit ->
-          mock = %{mock | used: used + 1}
-          {{:error, :exceeds_usage_limit}, [mock | mocks]}
-
-        mock, {response, mocks} ->
-          {response, [mock | mocks]}
-      end)
+      |> Enum.reduce({{:error, :not_found}, []}, &find_and_update_usable_mock/2)
 
     updated_signatures = Map.put(signatures, signature, Enum.reverse(reversed_signatures))
 
     {response, %{state | signatures: updated_signatures}}
+  end
+
+  defp find_and_update_usable_mock(mock, {{:ok, _} = matched_mock, mocks}) do
+    {matched_mock, [mock | mocks]}
+  end
+
+  defp find_and_update_usable_mock(
+         %Mock{used: used, usage_limit: limit} = mock,
+         {{:error, _}, mocks}
+       )
+       when used >= limit do
+    {{:error, :exceeds_usage_limit}, [mock | mocks]}
+  end
+
+  defp find_and_update_usable_mock(%Mock{used: used} = mock, {{:error, _}, mocks}) do
+    mock = %{mock | used: used + 1}
+    {{:ok, mock.callback}, [mock | mocks]}
   end
 
   @spec put_signature(t(), Signature.t(), Mock.t()) :: t()
