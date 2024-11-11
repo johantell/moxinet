@@ -19,30 +19,32 @@ defmodule Moxinet.SignatureStorage do
     {:ok, args}
   end
 
-  @spec store(
-          module(),
-          Moxinet.http_method(),
-          binary(),
-          Mock.callback(),
-          pid(),
-          pid() | module()
-        ) :: :ok
-  def store(scope, method, path, callback, from_pid \\ self(), pid \\ __MODULE__) do
+  @type store_option :: {:pid, pid()} | {:storage, module() | pid()} | {:times, pos_integer()}
+  @type store_options :: [store_option()]
+
+  @spec store(module(), Moxinet.http_method(), binary(), Mock.callback(), store_options()) :: :ok
+  def store(scope, method, path, callback, options \\ []) do
+    %{pid: pid, storage: storage_pid, times: usage_limit} =
+      options
+      |> Keyword.validate!(pid: self(), times: 1, storage: __MODULE__)
+      |> Map.new()
+
     signature = %Signature{
       mock_module: scope,
-      pid: pid_reference(from_pid),
+      pid: pid_reference(pid),
       method: method |> to_string() |> String.upcase(),
       path: path
     }
 
-    ref = %Mock{
-      callback: callback,
-      owner: from_pid,
-      usage_limit: 1,
-      used: 0
-    }
+    ref =
+      %Mock{
+        callback: callback,
+        owner: pid,
+        usage_limit: usage_limit,
+        used: 0
+      }
 
-    GenServer.call(pid, {:store, signature, ref})
+    GenServer.call(storage_pid, {:store, signature, ref})
   end
 
   @spec find_signature(module(), pid(), Moxinet.http_method(), binary(), pid() | module()) ::

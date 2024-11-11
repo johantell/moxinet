@@ -52,12 +52,31 @@ defmodule Moxinet do
   end
 
   @doc """
-  Mocks a call for the passed module when used from a certain pid, defaulting `self()`
+  Mocks a call for the passed module by defining a signature based on the pid, http method and path. 
+
+  ## Options: 
+
+  * `pid`: The source pid that the mock will be applied for. Defaults to `self()`
+  * `times`: The amount of times the mock signature may be used. Defaults to `1`
+  * `storage`: The signature storage to be used. Defaults to `Moxinet.SignatureStorage`
+
+  ## Examples:
+
+    Moxinet.expect(MyMock, :get, "/path/to/resource", fn _body ->
+      %Moxinet.Response{status: 200, body: "My response body"}
+    end)
+    
   """
   @type http_method :: :get | :post | :patch | :put | :delete | :options
-  @spec expect(module(), http_method, binary(), Moxinet.SignatureStorage.Mock.callback(), pid) ::
+  @spec expect(
+          module(),
+          http_method,
+          binary(),
+          Moxinet.SignatureStorage.Mock.callback(),
+          Moxinet.SignatureStorage.store_options()
+        ) ::
           :ok
-  defdelegate expect(module, http_method, path, callback, from_pid \\ self()),
+  defdelegate expect(module, http_method, path, callback, options \\ []),
     to: Moxinet.SignatureStorage,
     as: :store
 end
