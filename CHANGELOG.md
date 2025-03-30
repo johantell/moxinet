@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+Updates to dependencies and adding `times` option to `expect`:
+
+
+- Replace fourth argument in `expect` from `pid` to options.
+  In the scenarios where you've used `expect/5`, wrap the value in `times: old_value`.
+
 ## 0.2.1
 
 This version has mostly been about internal improvements, reliability where we'll see more helpful

@@ -14,7 +14,7 @@ Install the package by adding `moxinet` to your list of dependencies in `mix.exs
 ```elixir
 def deps do
   [
-    {:moxinet, "~> 0.2.1", only: :test}
+    {:moxinet, "~> 0.3.0", only: :test}
   ]
 end
 ```
