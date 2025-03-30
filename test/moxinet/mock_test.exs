@@ -1,9 +1,11 @@
 defmodule Moxinet.MockTest do
   use ExUnit.Case, async: true
-  use Plug.Test
 
   alias Moxinet.SignatureStorage
   alias Moxinet.Response
+
+  import Plug.Conn
+  import Plug.Test
 
   setup_all do
     _ = SignatureStorage.start_link(name: SignatureStorage)
