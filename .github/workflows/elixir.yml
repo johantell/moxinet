@@ -25,7 +25,7 @@ jobs:
     
     - name: Set up Elixir
       id: beam
-      uses: erlef/setup-beam@1.18.2
+      uses: erlef/setup-beam@1.18
       with:
         elixir-version: '1.15.2' # [Required] Define the Elixir version
         otp-version: '26.0'      # [Required] Define the Erlang/OTP version
