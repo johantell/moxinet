@@ -1,9 +1,11 @@
 defmodule Moxinet.ServerTest do
   use ExUnit.Case, async: true
-  use Plug.Test
 
   alias Moxinet.SignatureStorage
   alias Moxinet.Response
+
+  import Plug.Test
+  import Plug.Conn
 
   describe "__using__/1" do
     test "creates a router that can forward requests to servers" do
