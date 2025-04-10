@@ -80,6 +80,7 @@ defmodule Moxinet.Plug.MockedResponse do
 
     conn
     |> put_response_status(response)
+    |> put_response_headers(response)
     |> put_response_body(response)
   end
 
@@ -115,6 +116,12 @@ defmodule Moxinet.Plug.MockedResponse do
 
   defp put_response_status(%Plug.Conn{} = conn, %Response{status: status}) do
     Plug.Conn.put_status(conn, status)
+  end
+
+  defp put_response_headers(%Plug.Conn{} = conn, %Response{headers: headers}) do
+    Enum.reduce(headers, conn, fn {header, value}, acc ->
+      Plug.Conn.put_resp_header(acc, header, value)
+    end)
   end
 
   defp put_response_body(%Plug.Conn{} = conn, %Response{body: body}) do
