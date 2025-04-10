@@ -5,8 +5,9 @@ defmodule Moxinet.Response do
 
   @type t :: %__MODULE__{
           status: 100..600,
+          headers: [{binary(), binary()}],
           body: binary() | map() | [any()]
         }
 
-  defstruct status: 200, body: ""
+  defstruct status: 200, headers: [], body: ""
 end
