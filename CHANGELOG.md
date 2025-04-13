@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+Another small release:
+
+- Add `headers` to `Moxinet.Response` (allow response headers to be controlled)
+
 ## 0.3.0
 
 Updates to dependencies and adding `times` option to `expect`:
