@@ -24,6 +24,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   describe "call/2" do
     test "responds with applied signature and halts the conn" do
+      response_headers = [{"header1", "value1"}, {"header2", "value2"}]
       response_body = %{response: "yes"}
 
       conn =
@@ -32,7 +33,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("accept", "application/json")
 
       SignatureStorage.store(CustomAPIMock, :get, "/path", fn _payload ->
-        %Response{status: 200, body: response_body}
+        %Response{status: 200, headers: response_headers, body: response_body}
       end)
 
       conn = MockedResponse.call(conn, @opts)
@@ -40,6 +41,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert :sent == conn.state
       assert 200 == conn.status
       assert conn.resp_body == Jason.encode!(response_body)
+      Enum.each(response_headers, &assert(&1 in conn.resp_headers))
     end
 
     test "considers query params to be part of path" do

@@ -27,11 +27,16 @@ defmodule Moxinet.MockTest do
         MyMock.expect(
           :post,
           "/path",
-          fn _payload -> %Response{status: 499, body: "My body"} end,
+          fn _payload ->
+            %Response{status: 499, headers: [{"my-header", "my value"}], body: "My body"}
+          end,
           pid: self()
         )
 
-      assert %Plug.Conn{status: 499, resp_body: "My body"} = MyMock.call(conn, [])
+      assert %Plug.Conn{status: 499, resp_body: "My body", resp_headers: resp_headers} =
+               MyMock.call(conn, [])
+
+      assert {"my-header", "my value"} in resp_headers
     end
 
     test "links the mocked responses to requests made in child processes" do
