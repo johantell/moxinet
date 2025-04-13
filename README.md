@@ -85,10 +85,19 @@ alias Moxinet.Response
 describe "create_pr/1" do
   test "creates a pull request when" do
     GithubMock.expect(:post, "/pull-requests/123", fn _payload ->
-      %Response{status: 202, body: %{id: "pull-request-id"}}
+      %Response{status: 202, body: %{id: "pull-request-id"}, headers: [{"X-Rate-Limit", 10}]}
     end)
 
-    assert {:ok, %{status: 202, body: %{"id" => "pull-request-id"}}}} = GithubAPI.create_pr(title: "My PR")
+    assert {:ok,
+      %{
+       status: 202,
+       body: %{"id" => "pull-request-id"},
+       headers: [
+         {"X-Rate-Limit", 10},
+         {"Content-Type", "application/json"}
+       ]
+      }
+    } = GithubAPI.create_pr(title: "My PR")
   end
 end
 ```
