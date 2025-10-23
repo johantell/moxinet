@@ -44,7 +44,7 @@ defmodule Moxinet.SignatureStorage.State do
 
   @spec put_signature(t(), Signature.t(), Mock.t()) :: t()
   def put_signature(%__MODULE__{signatures: signatures} = state, signature, mock) do
-    %{state | signatures: Map.update(signatures, signature, [mock], &(&1 ++ [mock]))}
+    %{state | signatures: Map.update(signatures, signature, [mock], &Enum.concat(&1, [mock]))}
   end
 
   @spec remove_signatures_for_pid(t(), pid()) :: t()
