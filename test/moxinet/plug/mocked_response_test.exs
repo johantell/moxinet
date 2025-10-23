@@ -18,7 +18,13 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   describe "init/1" do
     test "returns the passed options" do
-      assert [scope: CustomAPIMock] == MockedResponse.init(scope: CustomAPIMock)
+      assert [scope: CustomAPIMock, storage: MyStorage] ==
+               MockedResponse.init(scope: CustomAPIMock, storage: MyStorage)
+    end
+
+    test "adds the default storage if non passed" do
+      assert [storage: SignatureStorage, scope: CustomAPIMock] ==
+               MockedResponse.init(scope: CustomAPIMock)
     end
   end
 

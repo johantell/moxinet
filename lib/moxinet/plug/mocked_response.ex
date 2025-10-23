@@ -10,18 +10,22 @@ defmodule Moxinet.Plug.MockedResponse do
 
   @spec init(plug_options()) :: plug_options()
   def init(opts) do
-    opts
+    Keyword.put_new(opts, :storage, SignatureStorage)
   end
 
   @spec call(Plug.Conn.t(), plug_options()) :: Plug.Conn.t()
-  def call(conn, scope: scope) do
+  def call(conn, opts) do
+    scope = Keyword.fetch!(opts, :scope)
+    storage = Keyword.fetch!(opts, :storage)
+
     with {:ok, pid} <- get_pid_reference(conn),
          {:ok, mock_function} <-
            SignatureStorage.find_signature(
              scope,
              pid,
              conn.method,
-             build_path(conn)
+             build_path(conn),
+             storage
            ) do
       conn
       |> apply_signature(mock_function)
