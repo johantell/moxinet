@@ -19,6 +19,7 @@ defmodule Moxinet do
     - `router`: A reference to your mock server. *Required*
     - `port`: The port your mock server will run on. *Required*
     - `name`: Name of the moxinet supervisor. Defaults to `Moxinet`
+    - `signature_storage`: Name of the signature storage server. Defaults to `Moxinet.SignatureStorage`
 
   """
 
