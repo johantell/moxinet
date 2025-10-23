@@ -21,19 +21,21 @@ defmodule Moxinet.Adapters.ReqTestAdapter do
   end
 
   @doc false
-  @spec capture_moxinet_errors({Request.t(), Response.t()}) :: {Request.t(), Response.t()} | no_return()
+  @spec capture_moxinet_errors({Request.t(), Response.t()}) ::
+          {Request.t(), Response.t()} | no_return()
   def capture_moxinet_errors({request, response}) do
     case Req.Response.get_header(response, "x-moxinet-error") do
       [error_header] ->
         [error_path] = Req.Response.get_header(response, "x-moxinet-path")
         method = request.method |> to_string() |> String.upcase()
 
-        error_module = error_header
-        |> Module.split()
-        |> List.last()
-        |> to_error_module()
+        error_module =
+          error_header
+          |> Module.split()
+          |> List.last()
+          |> to_error_module()
 
-      raise error_module, path: error_path, method: method
+        raise error_module, path: error_path, method: method
 
       _ ->
         {request, response}
