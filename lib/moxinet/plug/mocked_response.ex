@@ -3,6 +3,9 @@ defmodule Moxinet.Plug.MockedResponse do
 
   import Plug.Conn
 
+  alias Moxinet.ExceededUsageLimitError
+  alias Moxinet.InvalidReferenceError
+  alias Moxinet.MissingMockError
   alias Moxinet.Response
   alias Moxinet.SignatureStorage
 
@@ -33,13 +36,13 @@ defmodule Moxinet.Plug.MockedResponse do
       |> halt()
     else
       {:error, :missing_pid_reference} ->
-        fail_and_send(conn, build_error(Moxinet.InvalidReferenceError, conn))
+        fail_and_send(conn, build_error(InvalidReferenceError, conn))
 
       {:error, :exceeds_usage_limit} ->
-        fail_and_send(conn, build_error(Moxinet.ExceededUsageLimitError, conn))
+        fail_and_send(conn, build_error(ExceededUsageLimitError, conn))
 
       {:error, :not_found} ->
-        fail_and_send(conn, build_error(Moxinet.MissingMockError, conn))
+        fail_and_send(conn, build_error(MissingMockError, conn))
     end
   end
 
