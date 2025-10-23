@@ -22,7 +22,7 @@ defmodule Moxinet.SignatureStorage do
   @type store_option :: {:pid, pid()} | {:storage, module() | pid()} | {:times, pos_integer()}
   @type store_options :: [store_option()]
 
-  @spec store(module(), Moxinet.http_method(), binary(), Mock.callback(), store_options()) :: :ok
+  @spec store(module(), Moxinet.http_method() | binary(), binary(), Mock.callback(), store_options()) :: :ok
   def store(scope, method, path, callback, options \\ []) do
     %{pid: pid, storage: storage_pid, times: usage_limit} =
       options
@@ -47,7 +47,7 @@ defmodule Moxinet.SignatureStorage do
     GenServer.call(storage_pid, {:store, signature, ref})
   end
 
-  @spec find_signature(module(), pid(), Moxinet.http_method(), binary(), pid() | module()) ::
+  @spec find_signature(module(), pid(), Moxinet.http_method() | binary(), binary(), pid() | module()) ::
           {:ok, Mock.callback()} | {:error, :exceeds_usage_limit | :not_found}
   def find_signature(scope, from_pid, method, path, pid \\ __MODULE__) do
     signature = %Signature{
