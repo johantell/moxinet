@@ -22,6 +22,8 @@ end
 ### When using the `req` library, configure it to use `Moxinet.ReqTestAdapter` in yout `text.exs` file:
 
 ```elixir
+# config/test.exs
+
 config :req, default_options: [
   adapter: Moxinet.ReqTestAdapter
 ]
