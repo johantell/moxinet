@@ -1,6 +1,12 @@
 defmodule Moxinet.MissingMockError do
   defexception [:method, :path]
 
+  @type t :: %__MODULE__{
+          method: String.t(),
+          path: String.t()
+        }
+
+  @spec message(t()) :: String.t()
   def message(error) do
     String.trim("""
       No registered mock was found for the registered pid.
@@ -14,6 +20,12 @@ end
 defmodule Moxinet.ExceededUsageLimitError do
   defexception [:method, :path]
 
+  @type t :: %__MODULE__{
+          method: String.t(),
+          path: String.t()
+        }
+
+  @spec message(t()) :: String.t()
   def message(error) do
     String.trim("""
       The mocked callback may not be used more than once.
@@ -27,6 +39,12 @@ end
 defmodule Moxinet.InvalidReferenceError do
   defexception [:method, :path]
 
+  @type t :: %__MODULE__{
+          method: String.t(),
+          path: String.t()
+        }
+
+  @spec message(t()) :: String.t()
   def message(error) do
     String.trim("""
       Invalid reference was found in the `x-moxinet-ref` header.
