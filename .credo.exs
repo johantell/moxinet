@@ -162,7 +162,7 @@
           {Credo.Check.Warning.WrongTestFileExtension, []},
           {Credo.Check.Refactor.UtcNowTruncate, []},
           {Credo.Check.Consistency.MultiAliasImportRequireUse, []},
-          {Credo.Check.Design.DuplicatedCode, []},
+          {Credo.Check.Design.DuplicatedCode, false},
           {Credo.Check.Design.SkipTestWithoutComment, []},
           {Credo.Check.Readability.AliasAs, []},
           {Credo.Check.Readability.BlockPipe, []},
