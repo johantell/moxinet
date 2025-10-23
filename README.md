@@ -19,6 +19,16 @@ def deps do
 end
 ```
 
+### When using the `req` library, configure it to use `Moxinet.ReqTestAdapter` in yout `text.exs` file:
+
+```elixir
+# config/test.exs
+
+config :req, default_options: [
+  adapter: Moxinet.ReqTestAdapter
+]
+```
+
 ## Getting started
 To use `moxinet` you must first define your mock server, from which you'll forward
 mock-specific requests:
@@ -102,7 +112,7 @@ describe "create_pr/1" do
 end
 ```
 
-**NOTE**: One small caveat with `moxinet` is that in order for us to be able to match
+**NOTE for requests not managed by `req`**: One small caveat with `moxinet` is that in order for us to be able to match
 a mock defined in a request with an incoming request, the requests must send the `x-moxinet-ref` header.
 Most HTTP libraries allows adding custom headers to your requests, but that might not always be the case.
 

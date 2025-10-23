@@ -3,6 +3,9 @@ defmodule Moxinet.Plug.MockedResponse do
 
   import Plug.Conn
 
+  alias Moxinet.ExceededUsageLimitError
+  alias Moxinet.InvalidReferenceError
+  alias Moxinet.MissingMockError
   alias Moxinet.Response
   alias Moxinet.SignatureStorage
 
@@ -10,18 +13,22 @@ defmodule Moxinet.Plug.MockedResponse do
 
   @spec init(plug_options()) :: plug_options()
   def init(opts) do
-    opts
+    Keyword.put_new(opts, :storage, SignatureStorage)
   end
 
   @spec call(Plug.Conn.t(), plug_options()) :: Plug.Conn.t()
-  def call(conn, scope: scope) do
+  def call(conn, opts) do
+    scope = Keyword.fetch!(opts, :scope)
+    storage = Keyword.fetch!(opts, :storage)
+
     with {:ok, pid} <- get_pid_reference(conn),
          {:ok, mock_function} <-
            SignatureStorage.find_signature(
              scope,
              pid,
              conn.method,
-             build_path(conn)
+             build_path(conn),
+             storage
            ) do
       conn
       |> apply_signature(mock_function)
@@ -29,14 +36,18 @@ defmodule Moxinet.Plug.MockedResponse do
       |> halt()
     else
       {:error, :missing_pid_reference} ->
-        fail_and_send(conn, "Invalid reference was found in the `x-moxinet-ref` header.")
+        fail_and_send(conn, build_error(InvalidReferenceError, conn))
 
       {:error, :exceeds_usage_limit} ->
-        fail_and_send(conn, "The mocked callback may not be used more than once.")
+        fail_and_send(conn, build_error(ExceededUsageLimitError, conn))
 
       {:error, :not_found} ->
-        fail_and_send(conn, "No registered mock was found for the registered pid.")
+        fail_and_send(conn, build_error(MissingMockError, conn))
     end
+  end
+
+  defp build_error(error, conn) do
+    error.exception(method: conn.method, path: build_path(conn))
   end
 
   defp build_path(%Plug.Conn{path_info: path_info, query_string: query_string}) do
@@ -145,18 +156,13 @@ defmodule Moxinet.Plug.MockedResponse do
     {"content-type", "application/json"} in req_headers
   end
 
-  defp fail_and_send(conn, error_string) do
-    error_message = error_string <> "\n\n" <> format_error_details(conn)
+  defp fail_and_send(conn, %error_module{} = error) do
+    error_message = error_module.message(error)
 
     conn
+    |> put_resp_header("x-moxinet-error", to_string(error_module))
+    |> put_resp_header("x-moxinet-path", error.path)
     |> send_resp(500, error_message)
     |> halt()
-  end
-
-  defp format_error_details(conn) do
-    """
-    method: #{conn.method}
-    path: #{build_path(conn)}
-    """
   end
 end
