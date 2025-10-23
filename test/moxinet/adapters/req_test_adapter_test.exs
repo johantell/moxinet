@@ -58,4 +58,18 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
       assert {header_name, header_value} in Req.get_headers_list(request)
     end
   end
+
+  test "raises a moxinet error on a missing mock" do
+    request =
+      Req.new(
+        adapter: &ReqTestAdapter.run/1,
+        base_url: "http://0.0.0.0:4568/external_service/mocked_path",
+        method: :get,
+        retry: false
+      )
+
+    assert_raise Moxinet.MissingMockError, fn ->
+      Req.Request.run_request(request)
+    end
+  end
 end
