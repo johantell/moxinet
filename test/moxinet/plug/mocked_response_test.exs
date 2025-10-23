@@ -1,12 +1,12 @@
 defmodule Moxinet.Plug.MockedResponseTest do
   use ExUnit.Case, async: true
 
-  alias Moxinet.Plug.MockedResponse
-  alias Moxinet.SignatureStorage
-  alias Moxinet.Response
-
   import Plug.Test
   import Plug.Conn
+
+  alias Moxinet.Plug.MockedResponse
+  alias Moxinet.Response
+  alias Moxinet.SignatureStorage
 
   @opts MockedResponse.init(scope: CustomAPIMock)
 

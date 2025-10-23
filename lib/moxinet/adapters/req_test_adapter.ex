@@ -4,11 +4,13 @@ defmodule Moxinet.Adapters.ReqTestAdapter do
   """
 
   alias Req.Request
+  alias Req.Response
 
   @doc """
   Puts the moxinet header onto the req request and continues with `Req.Steps.run_finch/1` which is the normal
   default adapter.
   """
+  @spec run(Request.t()) :: Response.t()
   def run(%Request{} = request) do
     {header_name, header_value} = Moxinet.build_mock_header()
 
@@ -19,18 +21,20 @@ defmodule Moxinet.Adapters.ReqTestAdapter do
   end
 
   @doc false
+  @spec capture_moxinet_errors({Request.t(), Response.t()}) :: {Request.t(), Response.t()} | no_return()
   def capture_moxinet_errors({request, response}) do
-    with [error_header] <- Req.Response.get_header(response, "x-moxinet-error") do
-      method = request.method |> to_string |> String.upcase()
+    case Req.Response.get_header(response, "x-moxinet-error") do
+      [error_header] ->
+        [error_path] = Req.Response.get_header(response, "x-moxinet-path")
+        method = request.method |> to_string() |> String.upcase()
 
-      [error_path] = Req.Response.get_header(response, "x-moxinet-path")
+        error_header
+        |> Module.split()
+        |> List.last()
+        |> raise_error(path: error_path, method: method)
 
-      error_header
-      |> Module.split()
-      |> List.last()
-      |> raise_error(path: error_path, method: method)
-    else
-      _ -> {request, response}
+      _ ->
+        {request, response}
     end
   end
 

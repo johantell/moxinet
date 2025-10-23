@@ -1,8 +1,9 @@
 defmodule Moxinet.Adapters.ReqTestAdapterTest do
   use ExUnit.Case, async: true
 
-  alias Moxinet.Adapters.ReqTestAdapter
   import ExUnit.CaptureLog
+
+  alias Moxinet.Adapters.ReqTestAdapter
 
   defmodule Mock do
     use Moxinet.Mock,
@@ -27,7 +28,7 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
       end)
 
     assert Process.alive?(pid)
-    assert Process.alive?(Process.whereis(ReqTestStorage))
+    assert ReqTestStorage |> Process.whereis() |> Process.alive?()
 
     :ok
   end

@@ -3,11 +3,11 @@ defmodule Moxinet.SignatureStorage do
 
   use GenServer
 
+  import Moxinet, only: [pid_reference: 1]
+
   alias Moxinet.SignatureStorage.Mock
   alias Moxinet.SignatureStorage.Signature
   alias Moxinet.SignatureStorage.State
-
-  import Moxinet, only: [pid_reference: 1]
 
   @spec start_link(Keyword.t()) :: {:ok, pid()}
   def start_link(opts) do

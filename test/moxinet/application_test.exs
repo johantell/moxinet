@@ -1,9 +1,9 @@
 defmodule Moxinet.ApplicationTest do
   use ExUnit.Case, async: true
 
-  alias Moxinet.Application
-
   import ExUnit.CaptureLog
+
+  alias Moxinet.Application
 
   describe "start/1" do
     test "starts a `SignatureStorage`" do
