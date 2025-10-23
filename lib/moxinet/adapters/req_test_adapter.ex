@@ -28,21 +28,19 @@ defmodule Moxinet.Adapters.ReqTestAdapter do
         [error_path] = Req.Response.get_header(response, "x-moxinet-path")
         method = request.method |> to_string() |> String.upcase()
 
-        error_header
+        error_module = error_header
         |> Module.split()
         |> List.last()
         |> raise_error(path: error_path, method: method)
+
+      raise error_module, path: error_path, method: method
 
       _ ->
         {request, response}
     end
   end
 
-  defp raise_error("InvalidReferenceError", error_details) do
-    raise Moxinet.InvalidReferenceError, error_details
-  end
-
-  defp raise_error("MissingMockError", error_details) do
-    raise Moxinet.MissingMockError, error_details
-  end
+  defp raise_error("ExceededUsageLimitError"), do: Moxinet.ExceededUsageLimitError
+  defp raise_error("InvalidReferenceError"), do: Moxinet.InvalidReferenceError
+  defp raise_error("MissingMockError"), do: Moxinet.MissingMockError
 end
