@@ -31,7 +31,7 @@ defmodule Moxinet.Adapters.ReqTestAdapter do
         error_module = error_header
         |> Module.split()
         |> List.last()
-        |> raise_error(path: error_path, method: method)
+        |> to_error_module()
 
       raise error_module, path: error_path, method: method
 
@@ -40,7 +40,7 @@ defmodule Moxinet.Adapters.ReqTestAdapter do
     end
   end
 
-  defp raise_error("ExceededUsageLimitError"), do: Moxinet.ExceededUsageLimitError
-  defp raise_error("InvalidReferenceError"), do: Moxinet.InvalidReferenceError
-  defp raise_error("MissingMockError"), do: Moxinet.MissingMockError
+  defp to_error_module("ExceededUsageLimitError"), do: Moxinet.ExceededUsageLimitError
+  defp to_error_module("InvalidReferenceError"), do: Moxinet.InvalidReferenceError
+  defp to_error_module("MissingMockError"), do: Moxinet.MissingMockError
 end
