@@ -61,7 +61,7 @@ defmodule Moxinet.SignatureStorage do
           pid() | module()
         ) ::
           {:ok, Mock.callback()} | {:error, :exceeds_usage_limit | :not_found}
-  def find_signature(scope, from_pid, method, path, pid \\ __MODULE__) do
+  def find_signature(scope, from_pid, method, path, pid) do
     signature = %Signature{
       mock_module: scope,
       pid: pid_reference(from_pid),
