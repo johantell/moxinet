@@ -25,7 +25,7 @@ end
 # config/test.exs
 
 config :req, default_options: [
-  adapter: Moxinet.ReqTestAdapter
+  adapter: &Moxinet.ReqTestAdapter.run/1
 ]
 ```
 
