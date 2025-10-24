@@ -16,7 +16,7 @@ if Code.ensure_loaded?(Req) do
       {header_name, header_value} = Moxinet.build_mock_header()
 
       request
-      |> Request.put_header(header_name, header_value)
+      |> Request.put_new_header(header_name, header_value)
       |> Request.append_response_steps(capture_moxinet_errors: &capture_moxinet_errors/1)
       |> Req.Steps.run_finch()
     end
