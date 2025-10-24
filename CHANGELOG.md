@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.5.0
+
+Good news for everyone using `req`, moxinet can now be integrated seamlessly. 
+
+- Add `Moxinet.ReqTestAdapter` to make integration with `req` seamless
+- Improve error handling to raise regular elixir errors over http-content (`req` adapter only)
+- Add missing doc
+
+Upgrade guide for `req` users:
+
+1. in `text.exs`, add the following `req` configuration:
+
+```elixir
+# config/text.exs
+config :req, default_options: [
+  adapter: &Moxinet.ReqTestAdapter.run/1
+]
+```
+
+2. Remove any special way of adding the moxinet header to req requests
+
 ## 0.4.0
 
 Another small release:
