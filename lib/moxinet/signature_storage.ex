@@ -75,7 +75,7 @@ defmodule Moxinet.SignatureStorage do
     end
   end
 
-  def verify_usage!(test_pid, pid \\ __MODULE__) do
+  def verify_usage!(test_pid, pid) do
     case GenServer.call(pid, {:unused_signatures, test_pid}) do
       [] ->
         :ok

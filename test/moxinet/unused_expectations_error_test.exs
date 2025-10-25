@@ -16,7 +16,9 @@ defmodule Moxinet.UnusedExpectationsErrorTest do
 
       error = %UnusedExpectationsError{test_pid: test_pid, signatures: signatures}
 
-      assert UnusedExpectationsError.message(error) =~ "GET /get\nPOST /post"
+      error_string = UnusedExpectationsError.message(error)
+      assert error_string =~ "GET `/get`"
+      assert error_string =~ "POST `/post`"
     end
   end
 end

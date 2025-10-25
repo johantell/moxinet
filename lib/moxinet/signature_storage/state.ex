@@ -80,9 +80,20 @@ defmodule Moxinet.SignatureStorage.State do
   end
 
   def unused_signatures(%__MODULE__{signatures: signatures}, test_pid) do
-    Enum.filter(signatures, fn
-      {_signature, %Mock{owner: ^test_pid, used: times_used}} when times_used == 0 -> true
-      {_signature, _mock} -> false
+    pid_reference = test_pid
+    |> :erlang.term_to_binary()
+    |> Base.encode64()
+
+    signatures
+    |> Enum.filter(fn {%Signature{pid: encoded_pid}, _mocks} -> encoded_pid == pid_reference end)
+    |> Enum.reduce([],  fn {signature, mocks}, acc ->
+      unused_mocks = Enum.reject(mocks, &Mock.depleted?/1)
+
+      if Enum.any?(unused_mocks) do
+        [{signature, unused_mocks}| acc]
+      else
+        acc
+      end
     end)
   end
 end

@@ -77,9 +77,20 @@ defmodule Moxinet do
           Moxinet.SignatureStorage.store_options()
         ) ::
           :ok
-  defdelegate expect(module, http_method, path, callback, options \\ []),
-    to: Moxinet.SignatureStorage,
-    as: :store
+  def expect(module, http_method, path, callback, options \\ []) do
+    test_pid = self()
+    storage = Keyword.get(options, :storage, Moxinet.SignatureStorage)
+
+    :ok = setup_exunit_callback(test_pid, storage)
+
+    Moxinet.SignatureStorage.store(module, http_method, path, callback, options)
+  end
+
+  defp setup_exunit_callback(test_pid, storage) do
+    ExUnit.Callbacks.on_exit({Moxinet, self()}, fn ->
+      verify_usage!(test_pid, storage)
+    end)
+  end
 
   @doc """
   Verifies that all defined expectations have been called to prevent tests from

@@ -18,4 +18,8 @@ defmodule Moxinet.SignatureStorage.Mock do
         }
 
   defstruct [:owner, :callback, :usage_limit, :used]
+
+  def depleted?(%__MODULE__{used: used, usage_limit: usage_limit}) do
+    used >= usage_limit
+  end
 end
