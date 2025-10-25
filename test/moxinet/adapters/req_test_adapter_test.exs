@@ -79,7 +79,9 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
       "/mocked_path",
       fn _ ->
         %Moxinet.Response{status: 200}
-      end, storage: ReqTestStorage)
+      end,
+      storage: ReqTestStorage
+    )
 
     request =
       Req.new(
@@ -104,7 +106,9 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
       "/mocked_path",
       fn _ ->
         %Moxinet.Response{status: 200}
-      end, storage: ReqTestStorage)
+      end,
+      storage: ReqTestStorage
+    )
 
     request =
       Req.new(

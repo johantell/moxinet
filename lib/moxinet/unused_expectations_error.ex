@@ -14,6 +14,6 @@ defmodule Moxinet.UnusedExpectationsError do
   defp format_unused_signature(%Signature{path: path, mock_module: mock_module} = signature) do
     method = String.upcase(to_string(signature.method))
 
-     "#{method} `#{path}` (#{inspect(mock_module)})\n"
+    "#{method} `#{path}` (#{inspect(mock_module)})\n"
   end
 end

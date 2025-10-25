@@ -203,7 +203,10 @@ defmodule Moxinet.SignatureStorageTest do
       callback = fn _, _ -> {:ok, []} end
 
       :ok =
-        SignatureStorage.store(__MODULE__, method, path, callback, pid: test_pid, storage: storage_pid)
+        SignatureStorage.store(__MODULE__, method, path, callback,
+          pid: test_pid,
+          storage: storage_pid
+        )
 
       assert_raise Moxinet.UnusedExpectationsError, fn ->
         SignatureStorage.verify_usage!(test_pid, storage_pid)
