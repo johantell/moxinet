@@ -1,10 +1,12 @@
 defmodule Moxinet.Plug.MockedResponseTest do
   use ExUnit.Case, async: true
-  use Plug.Test
+
+  import Plug.Test
+  import Plug.Conn
 
   alias Moxinet.Plug.MockedResponse
-  alias Moxinet.SignatureStorage
   alias Moxinet.Response
+  alias Moxinet.SignatureStorage
 
   @opts MockedResponse.init(scope: CustomAPIMock)
 
@@ -16,12 +18,19 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   describe "init/1" do
     test "returns the passed options" do
-      assert [scope: CustomAPIMock] == MockedResponse.init(scope: CustomAPIMock)
+      assert [scope: CustomAPIMock, storage: MyStorage] ==
+               MockedResponse.init(scope: CustomAPIMock, storage: MyStorage)
+    end
+
+    test "adds the default storage if non passed" do
+      assert [storage: SignatureStorage, scope: CustomAPIMock] ==
+               MockedResponse.init(scope: CustomAPIMock)
     end
   end
 
   describe "call/2" do
     test "responds with applied signature and halts the conn" do
+      response_headers = [{"header1", "value1"}, {"header2", "value2"}]
       response_body = %{response: "yes"}
 
       conn =
@@ -30,7 +39,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
         |> put_req_header("accept", "application/json")
 
       SignatureStorage.store(CustomAPIMock, :get, "/path", fn _payload ->
-        %Response{status: 200, body: response_body}
+        %Response{status: 200, headers: response_headers, body: response_body}
       end)
 
       conn = MockedResponse.call(conn, @opts)
@@ -38,6 +47,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert :sent == conn.state
       assert 200 == conn.status
       assert conn.resp_body == Jason.encode!(response_body)
+      Enum.each(response_headers, &assert(&1 in conn.resp_headers))
     end
 
     test "considers query params to be part of path" do
@@ -79,7 +89,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       assert :sent == conn.state
       assert 500 == conn.status
-      assert conn.resp_body == "Invalid reference was found in the `x-moxinet-ref` header."
+      assert "Invalid reference was found in the `x-moxinet-ref` header." <> _ = conn.resp_body
     end
 
     test "responds with a 500-error with a detailed body when no signatures matched" do
@@ -145,6 +155,44 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
       assert_receive {:headers,
                       [{"accept", "application/json"}, {"x-special-header", "something"}]}
+    end
+
+    test "raises when callback returns something else than a `%Response{}`" do
+      conn =
+        put_req_header(
+          conn(:post, "/path", ""),
+          "x-moxinet-ref",
+          Moxinet.pid_reference(self())
+        )
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload ->
+        %{status: 200}
+      end)
+
+      assert_raise ArgumentError,
+                   "Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `%{status: 200}`",
+                   fn ->
+                     MockedResponse.call(conn, @opts)
+                   end
+    end
+
+    test "treats a non-string response body as JSON if no accept header is given" do
+      conn =
+        put_req_header(
+          conn(:post, "/path", ""),
+          "x-moxinet-ref",
+          Moxinet.pid_reference(self())
+        )
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload ->
+        %Response{status: 200, body: %{status: :ok}}
+      end)
+
+      conn = MockedResponse.call(conn, @opts)
+
+      assert 200 == conn.status
+      assert {"content-type", "application/json; charset=utf-8"} in conn.resp_headers
+      assert ~s({"status":"ok"}) == conn.resp_body
     end
   end
 end

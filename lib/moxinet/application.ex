@@ -7,6 +7,7 @@ defmodule Moxinet.Application do
 
   @http_server Application.compile_env(:moxinet, :http_server, Bandit)
 
+  @spec start(Keyword.t()) :: {:ok, pid()}
   def start(opts) do
     opts = Keyword.validate!(opts, [:router, :port, :name, :signature_storage])
 

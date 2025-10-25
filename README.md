@@ -14,9 +14,19 @@ Install the package by adding `moxinet` to your list of dependencies in `mix.exs
 ```elixir
 def deps do
   [
-    {:moxinet, "~> 0.2.0", only: :test}
+    {:moxinet, "~> 0.5.0", only: :test}
   ]
 end
+```
+
+### When using the `req` library, configure it to use `Moxinet.ReqTestAdapter` in yout `text.exs` file:
+
+```elixir
+# config/test.exs
+
+config :req, default_options: [
+  adapter: &Moxinet.ReqTestAdapter.run/1
+]
 ```
 
 ## Getting started
@@ -26,21 +36,32 @@ mock-specific requests:
 ```elixir
 # test/support/mock_server.ex
 
-defmodule MockServer do
+defmodule MyApp.MockServer do
   use Moxinet.Server
 
   forward("/github", to: GithubMock)
 end
 ```
 
-Start `moxinet` in `test_helper.exs` (before `ExUnit.start()`)
+Then create the mock module (in this example `GithubMock`):
+
 ```elixir
-{:ok, _} = Moxinet.start()
+# test/support/mock_servers/github_mock.ex
+
+defmodule GithubMock do
+  use Moxinet.Mock
+end
+```
+
+Start `moxinet` in your test helper (before `ExUnit.start()`)
+```elixir
+# test/test_helper.exs
+{:ok, _} = Moxinet.start(port: 4040, router: MyApp.MockServer)
 
 ExUnit.start()
 ```
 
-Let the configuration decide whether the API should call the remote server or the local mock server:
+Let the API configuration decide whether the API should call the remote server or the local mock server:
 
 ```elixir
 # config/config.exs
@@ -74,15 +95,24 @@ alias Moxinet.Response
 describe "create_pr/1" do
   test "creates a pull request when" do
     GithubMock.expect(:post, "/pull-requests/123", fn _payload ->
-      %Response{status: 202, body: %{id: "pull-request-id"}}
+      %Response{status: 202, body: %{id: "pull-request-id"}, headers: [{"X-Rate-Limit", 10}]}
     end)
 
-    assert {:ok, %{status: 202, body: %{"id" => "pull-request-id"}}}} = GithubAPI.create_pr(title: "My PR")
+    assert {:ok,
+      %{
+       status: 202,
+       body: %{"id" => "pull-request-id"},
+       headers: [
+         {"X-Rate-Limit", 10},
+         {"Content-Type", "application/json"}
+       ]
+      }
+    } = GithubAPI.create_pr(title: "My PR")
   end
 end
 ```
 
-**NOTE**: One small caveat with `moxinet` is that in order for us to be able to match
+**NOTE for requests not managed by `req`**: One small caveat with `moxinet` is that in order for us to be able to match
 a mock defined in a request with an incoming request, the requests must send the `x-moxinet-ref` header.
 Most HTTP libraries allows adding custom headers to your requests, but that might not always be the case.
 

@@ -35,30 +35,32 @@ defmodule Moxinet.Mock do
   ```
   """
 
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
+    storage = Keyword.get(opts, :storage, Moxinet.SignatureStorage)
+
     quote do
       use Plug.Debugger, otp_app: :moxinet
 
-      unquote(prelude())
+      unquote(prelude(storage: storage))
 
       plug :match
       plug :dispatch
 
       unquote(not_found_matcher())
 
-      def expect(http_method, path, callback, from_pid \\ self()) do
-        Moxinet.expect(__MODULE__, http_method, path, callback, from_pid)
+      def expect(http_method, path, callback, options \\ []) do
+        Moxinet.expect(__MODULE__, http_method, path, callback, options)
       end
     end
   end
 
-  defp prelude do
+  defp prelude(storage: storage) do
     quote do
       use Plug.Router
 
       import Moxinet
 
-      plug Moxinet.Plug.MockedResponse, scope: __MODULE__
+      plug Moxinet.Plug.MockedResponse, scope: __MODULE__, storage: unquote(storage)
     end
   end
 

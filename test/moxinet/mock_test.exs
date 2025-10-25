@@ -1,9 +1,11 @@
 defmodule Moxinet.MockTest do
   use ExUnit.Case, async: true
-  use Plug.Test
 
-  alias Moxinet.SignatureStorage
+  import Plug.Conn
+  import Plug.Test
+
   alias Moxinet.Response
+  alias Moxinet.SignatureStorage
 
   setup_all do
     _ = SignatureStorage.start_link(name: SignatureStorage)
@@ -25,11 +27,16 @@ defmodule Moxinet.MockTest do
         MyMock.expect(
           :post,
           "/path",
-          fn _payload -> %Response{status: 499, body: "My body"} end,
-          self()
+          fn _payload ->
+            %Response{status: 499, headers: [{"my-header", "my value"}], body: "My body"}
+          end,
+          pid: self()
         )
 
-      assert %Plug.Conn{status: 499, resp_body: "My body"} = MyMock.call(conn, [])
+      assert %Plug.Conn{status: 499, resp_body: "My body", resp_headers: resp_headers} =
+               MyMock.call(conn, [])
+
+      assert {"my-header", "my value"} in resp_headers
     end
 
     test "links the mocked responses to requests made in child processes" do
@@ -42,7 +49,7 @@ defmodule Moxinet.MockTest do
           :post,
           "/path",
           fn _payload -> %Response{status: 499, body: "My body"} end,
-          self()
+          pid: self()
         )
 
       task =
@@ -70,6 +77,34 @@ defmodule Moxinet.MockTest do
                status: 500,
                resp_body: "No registered mock was found for the registered pid." <> _
              } = MyFailingMock.call(conn, [])
+    end
+
+    test "gives a 500 response when an expectation is used multiple times" do
+      defmodule MyDoubleCallMock do
+        use Moxinet.Mock
+      end
+
+      :ok =
+        MyDoubleCallMock.expect(
+          :post,
+          "/path",
+          fn _payload -> %Response{status: 200, body: "ok"} end,
+          pid: self()
+        )
+
+      conn =
+        conn(:post, "/path")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+
+      assert %{
+               status: 200,
+               resp_body: "ok"
+             } = MyDoubleCallMock.call(conn, [])
+
+      assert %{
+               status: 500,
+               resp_body: "The mocked callback may not be used more than once." <> _
+             } = MyDoubleCallMock.call(conn, [])
     end
   end
 end
