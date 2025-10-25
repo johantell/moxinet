@@ -48,7 +48,7 @@ defmodule MoxinetTest do
 
   describe "expect/5" do
     test "can be called without the options" do
-      assert :ok = Moxinet.expect(__MODULE__, :get, "/path", fn _ -> :ok end)
+      assert :ok == Moxinet.expect(__MODULE__, :get, "/path", fn _ -> :ok end)
     end
   end
 end

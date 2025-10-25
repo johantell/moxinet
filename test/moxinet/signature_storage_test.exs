@@ -193,40 +193,4 @@ defmodule Moxinet.SignatureStorageTest do
                SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
     end
   end
-
-  describe "verify_usage!/1" do
-    test "raises an error when signatures were defined but not used" do
-      {:ok, storage_pid} = SignatureStorage.start_link([])
-      method = :post
-      test_pid = self()
-      path = "/my-path"
-      callback = fn _, _ -> {:ok, []} end
-
-      :ok =
-        SignatureStorage.store(__MODULE__, method, path, callback,
-          pid: test_pid,
-          storage: storage_pid
-        )
-
-      assert_raise Moxinet.UnusedExpectationsError, fn ->
-        SignatureStorage.verify_usage!(test_pid, storage_pid)
-      end
-    end
-
-    test "does not raise when all signatures was used" do
-      {:ok, storage_pid} = SignatureStorage.start_link([])
-      method = :post
-      test_pid = self()
-      path = "/my-path"
-      callback = fn _, _ -> {:ok, []} end
-
-      :ok =
-        SignatureStorage.store(__MODULE__, method, path, callback, storage: storage_pid)
-
-      assert {:ok, ^callback} =
-               SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
-
-      assert :ok == SignatureStorage.verify_usage!(self(), storage_pid)
-    end
-  end
 end

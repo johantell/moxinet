@@ -3,6 +3,12 @@ defmodule Moxinet.UnusedExpectationsError do
 
   alias Moxinet.SignatureStorage.Signature
 
+  @type t :: %__MODULE__{
+          test_pid: pid(),
+          signatures: [Signature.t()]
+        }
+
+  @spec message(t()) :: String.t()
   def message(%__MODULE__{test_pid: test_pid, signatures: signatures}) do
     String.trim("""
       test with pid `#{inspect(test_pid)}` did not use all expectations defined with `expect/4`
@@ -12,7 +18,10 @@ defmodule Moxinet.UnusedExpectationsError do
   end
 
   defp format_unused_signature(%Signature{path: path, mock_module: mock_module} = signature) do
-    method = String.upcase(to_string(signature.method))
+    method =
+      signature.method
+      |> to_string()
+      |> String.upcase()
 
     "#{method} `#{path}` (#{inspect(mock_module)})\n"
   end

@@ -79,6 +79,7 @@ defmodule Moxinet.SignatureStorage.State do
     %{state | monitors: Map.drop(monitors, [monitored_pid])}
   end
 
+  @spec unused_signatures(t(), pid()) :: [Signature.t()]
   def unused_signatures(%__MODULE__{signatures: signatures}, test_pid) do
     pid_reference =
       test_pid
