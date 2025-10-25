@@ -20,6 +20,9 @@ defmodule Moxinet.MixProject do
       package: [
         licenses: licenses(),
         links: links()
+      ],
+      dialyzer: [
+        plt_add_apps: [:ex_unit]
       ]
     ]
   end

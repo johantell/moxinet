@@ -78,4 +78,24 @@ defmodule Moxinet.SignatureStorage.State do
   def remove_monitor(%__MODULE__{monitors: monitors} = state, monitored_pid) do
     %{state | monitors: Map.drop(monitors, [monitored_pid])}
   end
+
+  @spec unused_signatures(t(), pid()) :: [Signature.t()]
+  def unused_signatures(%__MODULE__{signatures: signatures}, test_pid) do
+    pid_reference =
+      test_pid
+      |> :erlang.term_to_binary()
+      |> Base.encode64()
+
+    signatures
+    |> Enum.filter(fn {%Signature{pid: encoded_pid}, _mocks} -> encoded_pid == pid_reference end)
+    |> Enum.reduce([], fn {signature, mocks}, acc ->
+      unused_mocks = Enum.reject(mocks, &Mock.depleted?/1)
+
+      if Enum.any?(unused_mocks) do
+        [{signature, unused_mocks} | acc]
+      else
+        acc
+      end
+    end)
+  end
 end
