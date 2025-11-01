@@ -69,8 +69,7 @@ defmodule Moxinet.Plug.MockedResponse do
   @spec get_pid_reference(Plug.Conn.t()) :: {:ok, pid()} | {:error, :missing_pid_reference}
   defp get_pid_reference(%Plug.Conn{} = conn) do
     with [pid_reference] <- get_req_header(conn, "x-moxinet-ref"),
-         {:ok, pid_binary} <- Base.decode64(pid_reference),
-         pid when is_pid(pid) <- :erlang.binary_to_term(pid_binary) do
+         {:ok, pid} when is_pid(pid) <- Moxinet.PidReference.decode(pid_reference) do
       {:ok, pid}
     else
       _ -> {:error, :missing_pid_reference}

@@ -47,9 +47,7 @@ defmodule Moxinet do
         _ -> pid
       end
 
-    base_pid
-    |> :erlang.term_to_binary()
-    |> Base.encode64()
+    Moxinet.PidReference.encode(base_pid)
   end
 
   @doc """
