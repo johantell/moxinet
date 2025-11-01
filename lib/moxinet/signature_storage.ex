@@ -3,8 +3,6 @@ defmodule Moxinet.SignatureStorage do
 
   use GenServer
 
-  import Moxinet, only: [pid_reference: 1]
-
   alias Moxinet.SignatureStorage.Mock
   alias Moxinet.SignatureStorage.Signature
   alias Moxinet.SignatureStorage.State
@@ -37,7 +35,7 @@ defmodule Moxinet.SignatureStorage do
 
     signature = %Signature{
       mock_module: scope,
-      pid: pid_reference(pid),
+      pid: Moxinet.pid_reference(pid),
       method: method |> to_string() |> String.upcase(),
       path: path
     }
@@ -64,7 +62,7 @@ defmodule Moxinet.SignatureStorage do
   def find_signature(scope, from_pid, method, path, pid) do
     signature = %Signature{
       mock_module: scope,
-      pid: pid_reference(from_pid),
+      pid: Moxinet.pid_reference(from_pid),
       method: method |> to_string() |> String.upcase(),
       path: path
     }
