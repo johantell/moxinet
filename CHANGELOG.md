@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+Another small release focusing on quality and reliability
+
+- Use last pid in `$callers` list to try to refer back to test process
+- Raise error when mocks defined in a test hasn't been used
+
 ## 0.5.0
 
 Good news for everyone using `req`, moxinet can now be integrated seamlessly. 
