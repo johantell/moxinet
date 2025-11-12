@@ -41,13 +41,9 @@ defmodule Moxinet do
   """
   @spec pid_reference(pid()) :: String.t()
   def pid_reference(pid) when is_pid(pid) do
-    base_pid =
-      case Process.get(:"$callers") do
-        [first_pid | _rest] -> first_pid
-        _ -> pid
-      end
-
-    Moxinet.PidReference.encode(base_pid)
+    (Process.get(:"$callers") || [])
+    |> List.last(pid)
+    |> Moxinet.PidReference.encode()
   end
 
   @doc """

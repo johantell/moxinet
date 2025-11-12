@@ -44,5 +44,13 @@ defmodule MoxinetTest do
       assert "" <> _ = reference
       assert 40 = String.length(reference)
     end
+
+    test "refers back to the 'base pid' when ran in a task" do
+      test_pid = Moxinet.pid_reference(self())
+
+      task = Task.async(fn -> Moxinet.pid_reference(self()) end)
+
+      assert ^test_pid = Task.await(task)
+    end
   end
 end
