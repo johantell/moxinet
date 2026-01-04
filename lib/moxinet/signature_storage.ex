@@ -51,7 +51,7 @@ defmodule Moxinet.SignatureStorage do
     # Use owner_pid as both the key and owner in NimbleOwnership
     # Metadata is the State struct containing all signatures for this test
     result =
-      NimbleOwnership.get_and_update(server, owner_pid, owner_pid, fn
+      NimbleOwnership.get_and_update(server, owner_pid, :mocks, fn
         nil -> {:ok, State.put_signature(%State{}, signature, mock)}
         state -> {:ok, State.put_signature(state, signature, mock)}
       end)
@@ -81,7 +81,7 @@ defmodule Moxinet.SignatureStorage do
     # Due to pid_reference/1 walking $callers, from_pid is always the root test pid
     # It's both the owner and the key in NimbleOwnership
     result =
-      NimbleOwnership.get_and_update(server, from_pid, from_pid, fn
+      NimbleOwnership.get_and_update(server, from_pid, :mocks, fn
         nil ->
           {{:error, :not_found}, nil}
 

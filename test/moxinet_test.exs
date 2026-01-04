@@ -3,16 +3,16 @@ defmodule MoxinetTest do
 
   doctest Moxinet
 
+  defmodule FakeRouter do
+    use Plug.Router
+
+    get "/" do
+      send_resp(conn, 200, "Hello world")
+    end
+  end
+
   describe "start/1" do
     test "starts the `SignatureStorage`" do
-      defmodule FakeRouter do
-        use Plug.Router
-
-        get "/" do
-          send_resp(conn, 200, "Hello world")
-        end
-      end
-
       {:ok, pid} =
         Moxinet.start(
           port: 0000,

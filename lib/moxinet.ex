@@ -41,9 +41,18 @@ defmodule Moxinet do
   """
   @spec pid_reference(pid()) :: String.t()
   def pid_reference(pid) when is_pid(pid) do
-    (Process.get(:"$callers") || [])
-    |> List.last(pid)
-    |> Moxinet.PidReference.encode()
+    callers = Process.get(:"$callers") || [pid]
+
+    case NimbleOwnership.fetch_owner(Moxinet.SignatureStorage, callers, :mocks) do
+      {:ok, owner_pid} ->
+        Moxinet.PidReference.encode(owner_pid)
+
+      {:shared, {:shared, owner_pid}} ->
+        Moxinet.PidReference.encode(owner_pid)
+
+      :error ->
+        Moxinet.PidReference.encode(pid)
+    end
   end
 
   @doc """
