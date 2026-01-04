@@ -10,7 +10,6 @@ defmodule Moxinet.SignatureStorageTest do
       test_pid = self()
       path = "/my-path"
       callback = fn _, _ -> {:ok, []} end
-      pid_reference = Moxinet.pid_reference(test_pid)
 
       assert :ok =
                SignatureStorage.store(__MODULE__, method, path, callback,
@@ -18,19 +17,12 @@ defmodule Moxinet.SignatureStorageTest do
                  storage: storage_pid
                )
 
-      assert %{
-               signatures: %{
-                 %SignatureStorage.Signature{
-                   mock_module: __MODULE__,
-                   pid: ^pid_reference,
-                   method: "POST",
-                   path: ^path
-                 } => [%SignatureStorage.Mock{callback: ^callback}]
-               }
-             } = :sys.get_state(storage_pid)
+      # Verify by retrieving the signature
+      assert {:ok, ^callback} =
+               SignatureStorage.find_signature(__MODULE__, test_pid, method, path, storage_pid)
     end
 
-    test "adds a monitor to remove signatures when process dies" do
+    test "cleans up signatures when process dies" do
       {:ok, storage_pid} = SignatureStorage.start_link([])
 
       {pid, reference} =
@@ -40,12 +32,18 @@ defmodule Moxinet.SignatureStorageTest do
             storage: storage_pid
           )
 
-          assert 1 == Enum.count(:sys.get_state(storage_pid).signatures)
+          # Verify the signature was stored
+          assert {:ok, _} =
+                   SignatureStorage.find_signature(__MODULE__, self(), :post, "/", storage_pid)
         end)
 
       assert_receive {:DOWN, ^reference, :process, ^pid, :normal}
       assert false == Process.alive?(pid)
-      assert true == Enum.empty?(:sys.get_state(storage_pid).signatures)
+
+      # After the process dies, the signature should be cleaned up
+      # Trying to find it with the dead pid should fail
+      assert {:error, :not_found} =
+               SignatureStorage.find_signature(__MODULE__, pid, :post, "/", storage_pid)
     end
   end
 

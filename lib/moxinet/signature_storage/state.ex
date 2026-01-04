@@ -5,11 +5,10 @@ defmodule Moxinet.SignatureStorage.State do
   alias Moxinet.SignatureStorage.Signature
 
   @type t :: %__MODULE__{
-          signatures: %{Signature.t() => [Mock.t()]},
-          monitors: %{pid() => pid()}
+          signatures: %{Signature.t() => [Mock.t()]}
         }
 
-  defstruct signatures: %{}, monitors: %{}
+  defstruct signatures: %{}
 
   @spec get_signature(t(), Signature.t()) ::
           {{:ok, Mock.callback()}, t()}
@@ -47,44 +46,11 @@ defmodule Moxinet.SignatureStorage.State do
     %{state | signatures: Map.update(signatures, signature, [mock], &Enum.concat(&1, [mock]))}
   end
 
-  @spec remove_signatures_for_pid(t(), pid()) :: t()
-  def remove_signatures_for_pid(%__MODULE__{signatures: signatures} = state, test_pid) do
-    signatures =
-      signatures
-      |> Enum.map(fn {signature, mocks} ->
-        {signature, Enum.reject(mocks, &(&1.owner == test_pid))}
-      end)
-      |> Enum.reject(fn {_signature, mocks} -> Enum.empty?(mocks) end)
-      |> Map.new()
-
-    %{state | signatures: signatures}
-  end
-
-  @spec put_monitor(t(), pid()) :: t()
-  def put_monitor(%__MODULE__{monitors: monitors} = state, from_pid) do
-    monitors =
-      case monitors do
-        %{^from_pid => _monitor} ->
-          monitors
-
-        _ ->
-          Map.put(monitors, from_pid, Process.monitor(from_pid))
-      end
-
-    %{state | monitors: monitors}
-  end
-
-  @spec remove_monitor(t(), pid()) :: t()
-  def remove_monitor(%__MODULE__{monitors: monitors} = state, monitored_pid) do
-    %{state | monitors: Map.drop(monitors, [monitored_pid])}
-  end
-
-  @spec unused_signatures(t(), pid()) :: [Signature.t()]
-  def unused_signatures(%__MODULE__{signatures: signatures}, test_pid) do
-    pid_reference = Moxinet.PidReference.encode(test_pid)
-
+  @spec unused_signatures(t(), pid()) :: [{Signature.t(), [Mock.t()]}]
+  def unused_signatures(%__MODULE__{signatures: signatures}, _test_pid) do
+    # All signatures in this State belong to the owner (test_pid)
+    # NimbleOwnership ensures each test has its own State
     signatures
-    |> Enum.filter(fn {%Signature{pid: encoded_pid}, _mocks} -> encoded_pid == pid_reference end)
     |> Enum.reduce([], fn {signature, mocks}, acc ->
       unused_mocks = Enum.reject(mocks, &Mock.depleted?/1)
 

@@ -39,6 +39,7 @@ defmodule Moxinet.MixProject do
     [
       {:bandit, ">= 0.0.0"},
       {:jason, ">= 0.0.0"},
+      {:nimble_ownership, "~> 1.0"},
       {:plug, ">= 0.0.0"},
       {:ex_doc, ">= 0.37.0", only: :dev, runtime: false},
       {:credo, "~> 1.7.5", only: :dev, runtime: false},
