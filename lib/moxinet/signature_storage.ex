@@ -5,20 +5,6 @@ defmodule Moxinet.SignatureStorage do
   alias Moxinet.SignatureStorage.Signature
   alias Moxinet.SignatureStorage.State
 
-  @spec child_spec(Keyword.t()) :: Supervisor.child_spec()
-  def child_spec(opts) do
-    name = Keyword.get(opts, :name, __MODULE__)
-    NimbleOwnership.child_spec(name: name)
-  end
-
-  @spec start_link(Keyword.t()) :: {:ok, pid()}
-  def start_link(opts) do
-    case Keyword.fetch(opts, :name) do
-      {:ok, name} -> NimbleOwnership.start_link(name: name)
-      :error -> NimbleOwnership.start_link([])
-    end
-  end
-
   @type store_option :: {:pid, pid()} | {:storage, module() | pid()} | {:times, pos_integer()}
   @type store_options :: [store_option()]
 
@@ -30,9 +16,9 @@ defmodule Moxinet.SignatureStorage do
           store_options()
         ) :: :ok
   def store(scope, method, path, callback, options \\ []) do
-    %{pid: owner_pid, storage: server, times: usage_limit} =
+    %{pid: owner_pid, times: usage_limit} =
       options
-      |> Keyword.validate!(pid: self(), times: 1, storage: __MODULE__)
+      |> Keyword.validate!(pid: self(), times: 1)
       |> Map.new()
 
     signature = %Signature{
@@ -48,10 +34,8 @@ defmodule Moxinet.SignatureStorage do
       used: 0
     }
 
-    # Use owner_pid as both the key and owner in NimbleOwnership
-    # Metadata is the State struct containing all signatures for this test
     result =
-      NimbleOwnership.get_and_update(server, owner_pid, :mocks, fn
+      NimbleOwnership.get_and_update(__MODULE__, owner_pid, :mocks, fn
         nil -> {:ok, State.put_signature(%State{}, signature, mock)}
         state -> {:ok, State.put_signature(state, signature, mock)}
       end)
@@ -66,11 +50,10 @@ defmodule Moxinet.SignatureStorage do
           module(),
           pid(),
           Moxinet.http_method() | binary(),
-          binary(),
-          pid() | module()
+          binary()
         ) ::
           {:ok, Mock.callback()} | {:error, :exceeds_usage_limit | :not_found}
-  def find_signature(scope, from_pid, method, path, server) do
+  def find_signature(scope, from_pid, method, path) do
     signature = %Signature{
       mock_module: scope,
       method: method |> to_string() |> String.upcase(),
@@ -81,7 +64,7 @@ defmodule Moxinet.SignatureStorage do
     # Due to pid_reference/1 walking $callers, from_pid is always the root test pid
     # It's both the owner and the key in NimbleOwnership
     result =
-      NimbleOwnership.get_and_update(server, from_pid, :mocks, fn
+      NimbleOwnership.get_and_update(__MODULE__, from_pid, :mocks, fn
         nil ->
           {{:error, :not_found}, nil}
 

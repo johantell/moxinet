@@ -18,8 +18,7 @@ defmodule Moxinet.Application do
 
     children = [
       {@http_server, plug: router, scheme: :http, port: port},
-      {SignatureStorage, name: signature_storage}
-      # TODO: {NimbleOwnership, name: signature_storage}
+      {NimbleOwnership, name: signature_storage}
     ]
 
     opts = [strategy: :one_for_one, name: name]

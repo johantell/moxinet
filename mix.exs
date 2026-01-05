@@ -9,6 +9,7 @@ defmodule Moxinet.MixProject do
       version: @version,
       description: "Mocking server that, just like mox, allows parallel testing, but over HTTP.",
       elixir: "~> 1.15",
+      elixirc_paths: ["lib", "test/support"],
       start_permanent: false,
       deps: deps(),
       aliases: aliases(),

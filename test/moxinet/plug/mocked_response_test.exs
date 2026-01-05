@@ -10,12 +10,6 @@ defmodule Moxinet.Plug.MockedResponseTest do
 
   @opts MockedResponse.init(scope: CustomAPIMock)
 
-  setup_all do
-    _ = SignatureStorage.start_link(name: SignatureStorage)
-
-    {:ok, signature_storage: SignatureStorage}
-  end
-
   describe "init/1" do
     test "returns the passed options" do
       assert [scope: CustomAPIMock, storage: MyStorage] ==
