@@ -13,7 +13,6 @@ defmodule Moxinet.SignatureStorageTest do
       assert :ok =
                SignatureStorage.store(__MODULE__, method, path, callback, pid: test_pid)
 
-      # Verify by retrieving the signature
       assert {:ok, ^callback} =
                SignatureStorage.find_signature(__MODULE__, test_pid, method, path)
     end
@@ -23,7 +22,6 @@ defmodule Moxinet.SignatureStorageTest do
         spawn_monitor(fn ->
           SignatureStorage.store(__MODULE__, :post, "/", fn _ -> :ok end, pid: self())
 
-          # Verify the signature was stored
           assert {:ok, _} =
                    SignatureStorage.find_signature(__MODULE__, self(), :post, "/")
         end)
@@ -31,8 +29,6 @@ defmodule Moxinet.SignatureStorageTest do
       assert_receive {:DOWN, ^reference, :process, ^pid, :normal}
       assert false == Process.alive?(pid)
 
-      # After the process dies, the signature should be cleaned up
-      # Trying to find it with the dead pid should fail
       assert {:error, :not_found} =
                SignatureStorage.find_signature(__MODULE__, pid, :post, "/")
     end
