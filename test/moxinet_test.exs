@@ -45,4 +45,37 @@ defmodule MoxinetTest do
       assert 40 = String.length(reference)
     end
   end
+
+  describe "allow/2" do
+    test "allows a spawned process to access parent process mocks" do
+      parent = self()
+
+      Moxinet.FakeRouter.FakeMock.expect(:get, "/fakemock/allowed", fn _body ->
+        %Moxinet.Response{status: 200, body: "allowed"}
+      end)
+
+      spawn(fn ->
+        callers = Process.get(:"$callers") || [self()]
+
+        assert :error = NimbleOwnership.fetch_owner(Moxinet.SignatureStorage, callers, :mocks)
+
+        :ok = Moxinet.allow(parent, self())
+
+        send(parent, NimbleOwnership.fetch_owner(Moxinet.SignatureStorage, callers, :mocks))
+      end)
+
+      assert_receive {:ok, ^parent}
+    end
+
+    test "returns error when pid_with_access has no ownership" do
+      other_pid = spawn(fn -> :ok end)
+
+      task =
+        Task.async(fn ->
+          Moxinet.allow(other_pid, self())
+        end)
+
+      assert {:error, _reason} = Task.await(task)
+    end
+  end
 end

@@ -53,22 +53,19 @@ defmodule Moxinet.SignatureStorage do
           binary()
         ) ::
           {:ok, Mock.callback()} | {:error, :exceeds_usage_limit | :not_found}
-  def find_signature(scope, from_pid, method, path) do
-    signature = %Signature{
-      mock_module: scope,
-      method: method |> to_string() |> String.upcase(),
-      path: path
-    }
-
-    # from_pid is decoded from the x-moxinet-ref header
-    # Due to pid_reference/1 walking $callers, from_pid is always the root test pid
-    # It's both the owner and the key in NimbleOwnership
+  def find_signature(scope, test_pid, method, path) do
     result =
-      NimbleOwnership.get_and_update(__MODULE__, from_pid, :mocks, fn
+      NimbleOwnership.get_and_update(__MODULE__, test_pid, :mocks, fn
         nil ->
           {{:error, :not_found}, nil}
 
         state ->
+          signature = %Signature{
+            mock_module: scope,
+            method: method |> to_string() |> String.upcase(),
+            path: path
+          }
+
           State.get_signature(state, signature)
       end)
 
