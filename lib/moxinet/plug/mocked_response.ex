@@ -19,7 +19,6 @@ defmodule Moxinet.Plug.MockedResponse do
   @spec call(Plug.Conn.t(), plug_options()) :: Plug.Conn.t()
   def call(conn, opts) do
     scope = Keyword.fetch!(opts, :scope)
-    storage = Keyword.fetch!(opts, :storage)
 
     with {:ok, pid} <- get_pid_reference(conn),
          {:ok, mock_function} <-
@@ -27,8 +26,7 @@ defmodule Moxinet.Plug.MockedResponse do
              scope,
              pid,
              conn.method,
-             build_path(conn),
-             storage
+             build_path(conn)
            ) do
       conn
       |> apply_signature(mock_function)

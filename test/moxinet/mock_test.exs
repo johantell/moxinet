@@ -5,13 +5,6 @@ defmodule Moxinet.MockTest do
   import Plug.Test
 
   alias Moxinet.Response
-  alias Moxinet.SignatureStorage
-
-  setup_all do
-    _ = SignatureStorage.start_link(name: SignatureStorage)
-
-    {:ok, signature_storage: SignatureStorage}
-  end
 
   describe "__using__/1" do
     test "builds a custom mock that allows custom expectations" do

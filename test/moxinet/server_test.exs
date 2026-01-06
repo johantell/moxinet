@@ -5,7 +5,6 @@ defmodule Moxinet.ServerTest do
   import Plug.Conn
 
   alias Moxinet.Response
-  alias Moxinet.SignatureStorage
 
   describe "__using__/1" do
     test "creates a router that can forward requests to servers" do
@@ -18,8 +17,6 @@ defmodule Moxinet.ServerTest do
 
         forward("/external_service", to: Mock)
       end
-
-      _ = SignatureStorage.start_link(name: SignatureStorage)
 
       Mock.expect(:get, "/mocked_path", fn _payload ->
         %Response{status: 418, headers: [{"my-header", "My header value"}], body: "Hello world"}

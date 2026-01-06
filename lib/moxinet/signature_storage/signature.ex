@@ -3,10 +3,9 @@ defmodule Moxinet.SignatureStorage.Signature do
 
   @type t :: %__MODULE__{
           mock_module: module(),
-          pid: pid(),
-          method: :get | :post | :put | :patch | :options,
+          method: String.t(),
           path: String.t()
         }
 
-  defstruct [:mock_module, :pid, :method, :path]
+  defstruct [:mock_module, :method, :path]
 end

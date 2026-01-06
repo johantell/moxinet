@@ -41,9 +41,18 @@ defmodule Moxinet do
   """
   @spec pid_reference(pid()) :: String.t()
   def pid_reference(pid) when is_pid(pid) do
-    (Process.get(:"$callers") || [])
-    |> List.last(pid)
-    |> Moxinet.PidReference.encode()
+    callers = Process.get(:"$callers") || [pid]
+
+    case NimbleOwnership.fetch_owner(Moxinet.SignatureStorage, callers, :mocks) do
+      {:ok, owner_pid} ->
+        Moxinet.PidReference.encode(owner_pid)
+
+      {:shared_owner, shared_owner_pid} ->
+        Moxinet.PidReference.encode(shared_owner_pid)
+
+      :error ->
+        Moxinet.PidReference.encode(pid)
+    end
   end
 
   @doc """
@@ -84,6 +93,46 @@ defmodule Moxinet do
     ExUnit.Callbacks.on_exit({Moxinet, self()}, fn ->
       verify_usage!(test_pid, storage)
     end)
+  end
+
+  @doc """
+  Allows `pid_to_allow` to use mocks defined by `pid_with_access`.
+
+  This is useful when a test spawns processes that need access to the tests
+  expectations. By default, most mocks set up with `expect/5` will work out of the box
+  but in scenarios where the allowance cannot be inferred through `$callers`,
+  it must be explicitly defined.
+
+  ## Example
+
+  A common use case is when the code under test spawns a process that makes HTTP requests:
+
+      test "spawned process can use parent mocks" do
+        parent = self()
+
+        Moxinet.expect(MyMock, :get, "/users", fn _body ->
+          %Moxinet.Response{status: 200, body: ~s({"id": 1})}
+        end)
+
+        task =
+          spawn(fn ->
+            Moxinet.allow(parent, self())
+
+            # Now this process can make requests that use the mock
+            {:ok, response} = MyHTTPClient.get("/users")
+            response
+
+            send(parent, response)
+          end)
+
+        assert_receive %{id: 1}
+      end
+
+  """
+  @spec allow(pid(), pid() | (-> pid())) :: :ok | {:error, NimbleOwnership.Error.t()}
+  def allow(pid_with_access, pid_to_allow)
+      when is_pid(pid_with_access) and (is_pid(pid_to_allow) or is_function(pid_to_allow, 0)) do
+    NimbleOwnership.allow(Moxinet.SignatureStorage, pid_with_access, pid_to_allow, :mocks)
   end
 
   @doc """

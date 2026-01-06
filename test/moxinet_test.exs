@@ -3,16 +3,16 @@ defmodule MoxinetTest do
 
   doctest Moxinet
 
+  defmodule FakeRouter do
+    use Plug.Router
+
+    get "/" do
+      send_resp(conn, 200, "Hello world")
+    end
+  end
+
   describe "start/1" do
     test "starts the `SignatureStorage`" do
-      defmodule FakeRouter do
-        use Plug.Router
-
-        get "/" do
-          send_resp(conn, 200, "Hello world")
-        end
-      end
-
       {:ok, pid} =
         Moxinet.start(
           port: 0000,
@@ -44,13 +44,38 @@ defmodule MoxinetTest do
       assert "" <> _ = reference
       assert 40 = String.length(reference)
     end
+  end
 
-    test "refers back to the 'base pid' when ran in a task" do
-      test_pid = Moxinet.pid_reference(self())
+  describe "allow/2" do
+    test "allows a spawned process to access parent process mocks" do
+      parent = self()
 
-      task = Task.async(fn -> Moxinet.pid_reference(self()) end)
+      Moxinet.FakeRouter.FakeMock.expect(:get, "/fakemock/allowed", fn _body ->
+        %Moxinet.Response{status: 200, body: "allowed"}
+      end)
 
-      assert ^test_pid = Task.await(task)
+      spawn(fn ->
+        callers = Process.get(:"$callers") || [self()]
+
+        assert :error = NimbleOwnership.fetch_owner(Moxinet.SignatureStorage, callers, :mocks)
+
+        :ok = Moxinet.allow(parent, self())
+
+        send(parent, NimbleOwnership.fetch_owner(Moxinet.SignatureStorage, callers, :mocks))
+      end)
+
+      assert_receive {:ok, ^parent}
+    end
+
+    test "returns error when pid_with_access has no ownership" do
+      other_pid = spawn(fn -> :ok end)
+
+      task =
+        Task.async(fn ->
+          Moxinet.allow(other_pid, self())
+        end)
+
+      assert {:error, _reason} = Task.await(task)
     end
   end
 end
