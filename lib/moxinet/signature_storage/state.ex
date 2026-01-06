@@ -38,6 +38,7 @@ defmodule Moxinet.SignatureStorage.State do
 
   defp find_and_update_usable_mock(%Mock{used: used} = mock, {{:error, _}, mocks}) do
     mock = %{mock | used: used + 1}
+
     {{:ok, mock.callback}, [mock | mocks]}
   end
 
