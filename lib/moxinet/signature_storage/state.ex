@@ -48,16 +48,13 @@ defmodule Moxinet.SignatureStorage.State do
 
   @spec unused_signatures(t(), pid()) :: [{Signature.t(), [Mock.t()]}]
   def unused_signatures(%__MODULE__{signatures: signatures}, _test_pid) do
-    # All signatures in this State belong to the owner (test_pid)
-    # NimbleOwnership ensures each test has its own State
-    signatures
-    |> Enum.reduce([], fn {signature, mocks}, acc ->
+    Enum.flat_map(signatures, fn {signature, mocks} ->
       unused_mocks = Enum.reject(mocks, &Mock.depleted?/1)
 
       if Enum.any?(unused_mocks) do
-        [{signature, unused_mocks} | acc]
+        [{signature, unused_mocks}]
       else
-        acc
+        []
       end
     end)
   end
