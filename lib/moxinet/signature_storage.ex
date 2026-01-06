@@ -10,7 +10,7 @@ defmodule Moxinet.SignatureStorage do
 
   @spec store(
           module(),
-          Moxinet.http_method() | binary(),
+          Moxinet.http_method(),
           binary(),
           Mock.callback(),
           store_options()
