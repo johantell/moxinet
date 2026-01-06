@@ -24,6 +24,12 @@ defmodule Moxinet.MixProject do
       ],
       dialyzer: [
         plt_add_apps: [:ex_unit]
+      ],
+      test_coverage: [
+        ignore_modules: [
+          Moxinet.FakeRouter,
+          Moxinet.FakeRouter.FakeMock
+        ]
       ]
     ]
   end
