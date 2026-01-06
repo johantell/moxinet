@@ -40,11 +40,14 @@ defmodule Moxinet.SignatureStorage do
         state -> {:ok, State.put_signature(state, signature, mock)}
       end)
 
-    normalize_store_result(result)
-  end
+    case result do
+      {:ok, _result} ->
+        :ok
 
-  defp normalize_store_result({:ok, :ok}), do: :ok
-  defp normalize_store_result({:error, reason}), do: {:error, reason}
+      {:error, _reason} = error ->
+        error
+    end
+  end
 
   @spec find_signature(
           module(),
@@ -69,12 +72,17 @@ defmodule Moxinet.SignatureStorage do
           State.get_signature(state, signature)
       end)
 
-    normalize_find_result(result)
-  end
+    case result do
+      {:ok, {:ok, callback}} ->
+        {:ok, callback}
 
-  defp normalize_find_result({:ok, {:ok, callback}}), do: {:ok, callback}
-  defp normalize_find_result({:ok, {:error, reason}}), do: {:error, reason}
-  defp normalize_find_result({:error, _}), do: {:error, :not_found}
+      {:ok, {:error, _reason} = error} ->
+        error
+
+      {:error, _reason} = error ->
+        error
+    end
+  end
 
   @spec verify_usage!(pid(), pid() | module()) :: :ok | no_return()
   def verify_usage!(test_pid, server) do
