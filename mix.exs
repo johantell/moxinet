@@ -9,6 +9,7 @@ defmodule Moxinet.MixProject do
       version: @version,
       description: "Mocking server that, just like mox, allows parallel testing, but over HTTP.",
       elixir: "~> 1.15",
+      elixirc_paths: ["lib", "test/support"],
       start_permanent: false,
       deps: deps(),
       aliases: aliases(),
@@ -23,6 +24,12 @@ defmodule Moxinet.MixProject do
       ],
       dialyzer: [
         plt_add_apps: [:ex_unit]
+      ],
+      test_coverage: [
+        ignore_modules: [
+          Moxinet.FakeRouter,
+          Moxinet.FakeRouter.FakeMock
+        ]
       ]
     ]
   end
@@ -39,6 +46,7 @@ defmodule Moxinet.MixProject do
     [
       {:bandit, ">= 0.0.0"},
       {:jason, ">= 0.0.0"},
+      {:nimble_ownership, "~> 1.0"},
       {:plug, ">= 0.0.0"},
       {:ex_doc, ">= 0.37.0", only: :dev, runtime: false},
       {:credo, "~> 1.7.5", only: :dev, runtime: false},

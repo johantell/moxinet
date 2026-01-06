@@ -44,14 +44,9 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
           retry: false
         )
 
-      Mock.expect(
-        :get,
-        "/mocked_path",
-        fn _payload ->
-          %Moxinet.Response{status: 200, body: "Hello world"}
-        end,
-        storage: ReqTestStorage
-      )
+      Mock.expect(:get, "/mocked_path", fn _payload ->
+        %Moxinet.Response{status: 200, body: "Hello world"}
+      end)
 
       {request, _response} = Req.Request.run_request(request)
 
@@ -74,14 +69,7 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
   end
 
   test "raises a moxinet error when a mock exceeds its usage limit" do
-    Mock.expect(
-      :get,
-      "/mocked_path",
-      fn _ ->
-        %Moxinet.Response{status: 200}
-      end,
-      storage: ReqTestStorage
-    )
+    Mock.expect(:get, "/mocked_path", fn _ -> %Moxinet.Response{status: 200} end)
 
     request =
       Req.new(
@@ -101,14 +89,7 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
   test "raises a moxinet error when the `x-moxinet-ref` is invalid" do
     {header_name, _header_value} = Moxinet.build_mock_header()
 
-    Mock.expect(
-      :get,
-      "/mocked_path",
-      fn _ ->
-        %Moxinet.Response{status: 200}
-      end,
-      storage: ReqTestStorage
-    )
+    Mock.expect(:get, "/mocked_path", fn _ -> %Moxinet.Response{status: 200} end)
 
     request =
       Req.new(
