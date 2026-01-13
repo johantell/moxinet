@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0
+
+Small release to improve ownership tracking
+
+- Integrate NimbleOwnership for more robust ownership tracking
+
 ## 0.6.0
 Another small release focusing on quality and reliability
 
