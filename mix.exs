@@ -52,7 +52,8 @@ defmodule Moxinet.MixProject do
       {:credo, "~> 1.7.5", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4.3", only: :dev, runtime: false},
       {:req, "~> 0.5", optional: true},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:usage_rules, "~> 1.2", only: :dev}
     ]
   end
 
