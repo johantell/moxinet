@@ -27,3 +27,6 @@ moxinet-*.tar
 
 # Mac OS artifacts
 .DS_Store
+
+# Nix build result symlink
+/result
