@@ -19,7 +19,7 @@ def deps do
 end
 ```
 
-### When using the `req` library, configure it to use `Moxinet.ReqTestAdapter` in yout `text.exs` file:
+### When using the `req` library, configure it to use `Moxinet.ReqTestAdapter` in your `test.exs` file:
 
 ```elixir
 # config/test.exs
@@ -93,7 +93,7 @@ In tests, you can create rules for how your mocks should behave through `expect/
 alias Moxinet.Response
 
 describe "create_pr/1" do
-  test "creates a pull request when" do
+  test "creates a pull request" do
     GithubMock.expect(:post, "/pull-requests/123", fn _payload ->
       %Response{status: 202, body: %{id: "pull-request-id"}, headers: [{"X-Rate-Limit", 10}]}
     end)
@@ -185,7 +185,7 @@ will absolutely do the job, but there are a few drawbacks:
 
 
 ## How it works
-`Moxinet` works a lot similar to `mox` except it'll focus on solving the same issue for HTTP request.
+`Moxinet` works very similarly to `mox` except it'll focus on solving the same issue for HTTP request.
 
 The test pid will be registered in the mock registry, where it can later be accessed from inside the mock.
 
