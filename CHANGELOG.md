@@ -22,10 +22,10 @@ Good news for everyone using `req`, moxinet can now be integrated seamlessly.
 
 Upgrade guide for `req` users:
 
-1. in `text.exs`, add the following `req` configuration:
+1. in `test.exs`, add the following `req` configuration:
 
 ```elixir
-# config/text.exs
+# config/test.exs
 config :req, default_options: [
   adapter: &Moxinet.ReqTestAdapter.run/1
 ]

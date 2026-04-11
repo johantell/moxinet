@@ -3,13 +3,14 @@
 ![Hex.pm License](https://img.shields.io/hexpm/l/moxinet)
 
 # Moxinet
-Mocking server that, just like `mox`, allows parallel testing.
+
+HTTP mocking server for Elixir that supports parallel testing — like `mox`, but at the HTTP layer.
 
 HexDocs: https://hexdocs.pm/moxinet
 
 ## Installation
 
-Install the package by adding `moxinet` to your list of dependencies in `mix.exs`:
+Add `moxinet` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -19,19 +20,11 @@ def deps do
 end
 ```
 
-### When using the `req` library, configure it to use `Moxinet.ReqTestAdapter` in yout `text.exs` file:
-
-```elixir
-# config/test.exs
-
-config :req, default_options: [
-  adapter: &Moxinet.Adapters.ReqTestAdapter.run/1
-]
-```
-
 ## Getting started
-To use `moxinet` you must first define your mock server, from which you'll forward
-mock-specific requests:
+
+### 1. Define a mock server
+
+The mock server is a Plug router that forwards requests to mock modules:
 
 ```elixir
 # test/support/mock_server.ex
@@ -43,7 +36,7 @@ defmodule MyApp.MockServer do
 end
 ```
 
-Then create the mock module (in this example `GithubMock`):
+### 2. Create a mock module
 
 ```elixir
 # test/support/mock_servers/github_mock.ex
@@ -53,7 +46,10 @@ defmodule GithubMock do
 end
 ```
 
-Start `moxinet` in your test helper (before `ExUnit.start()`)
+### 3. Start Moxinet in your test helper
+
+Moxinet must be started before `ExUnit.start()`:
+
 ```elixir
 # test/test_helper.exs
 {:ok, _} = Moxinet.start(port: 4040, router: MyApp.MockServer)
@@ -61,7 +57,9 @@ Start `moxinet` in your test helper (before `ExUnit.start()`)
 ExUnit.start()
 ```
 
-Let the API configuration decide whether the API should call the remote server or the local mock server:
+### 4. Configure your API urls
+
+Point API urls at the mock server in the test environment:
 
 ```elixir
 # config/config.exs
@@ -73,27 +71,26 @@ config :my_app, GithubAPI,
   url: "http://localhost:4040/github"
 ```
 
----
+### 5. Configure the `req` adapter (recommended)
 
-If you're familiar with `plug`, you'll see that our mock server is indeed a plug and can therefore
-be extended like one.
-
-After you've added your server, mocks can be defined:
+With `req`, configure the adapter in `test.exs`. This automatically injects the `x-moxinet-ref` header into all requests — no manual header management needed:
 
 ```elixir
-# test/support/mocks/github_mock.ex
-defmodule GithubMock do
-  use Moxinet.Mock
-end
+# config/test.exs
+config :req, default_options: [
+  adapter: &Moxinet.Adapters.ReqTestAdapter.run/1
+]
 ```
 
-In tests, you can create rules for how your mocks should behave through `expect/4`:
+### 6. Write tests
+
+Use `expect/4` to define how your mocks should respond:
 
 ```elixir
 alias Moxinet.Response
 
 describe "create_pr/1" do
-  test "creates a pull request when" do
+  test "creates a pull request" do
     GithubMock.expect(:post, "/pull-requests/123", fn _payload ->
       %Response{status: 202, body: %{id: "pull-request-id"}, headers: [{"X-Rate-Limit", 10}]}
     end)
@@ -112,12 +109,80 @@ describe "create_pr/1" do
 end
 ```
 
-**NOTE for requests not managed by `req`**: One small caveat with `moxinet` is that in order for us to be able to match
-a mock defined in a request with an incoming request, the requests must send the `x-moxinet-ref` header.
-Most HTTP libraries allows adding custom headers to your requests, but that might not always be the case.
+## Core concepts
 
-It's also not recommended to send the `x-moxinet-ref` header outside your test environment, meaning you'd
-likely want to do find a way to conditionally add it. Here is one example on how to achieve it in `req`:
+### `Moxinet.Response`
+
+Every `expect` callback must return a `%Moxinet.Response{}` struct:
+
+```elixir
+%Moxinet.Response{
+  status: 200,                          # required, integer 100-600
+  body: %{key: "value"},                # map, list, or binary (maps/lists are JSON-encoded)
+  headers: [{"X-Rate-Limit", "100"}]    # optional response headers
+}
+```
+
+The `Content-Type: application/json` header is added automatically when the body is a map or list.
+
+### `expect/4` options
+
+Pass options as the fifth argument:
+
+- `times:` — how many times the expectation can be matched (default: `1`)
+- `pid:` — the owning pid (default: `self()`)
+
+```elixir
+GithubMock.expect(:get, "/events", fn _body ->
+  %Moxinet.Response{status: 200, body: []}
+end, times: 3)
+```
+
+Callbacks can be 1-arity (receives the request body) or 2-arity (receives the request body and headers).
+
+### `allow/2`
+
+`$callers` propagation covers `Task` and most OTP processes automatically. For plain `spawn/1`, explicitly grant access:
+
+```elixir
+test "spawned process uses parent mocks" do
+  parent = self()
+
+  GithubMock.expect(:get, "/users", fn _ ->
+    %Moxinet.Response{status: 200, body: []}
+  end)
+
+  spawn(fn ->
+    Moxinet.allow(parent, self())
+    MyHTTPClient.get("/users")
+  end)
+end
+```
+
+### `verify_usage!`
+
+Unused expectations raise `Moxinet.UnusedExpectationsError` at the end of each test. This is checked automatically via an `on_exit` callback registered by `expect/4`.
+
+To verify explicitly:
+
+```elixir
+setup :verify_usage!
+```
+
+### Error reference
+
+| Error | Cause |
+|---|---|
+| `Moxinet.MissingMockError` | No expectation registered for that pid/method/path |
+| `Moxinet.ExceededUsageLimitError` | Expectation called more times than its `times:` limit |
+| `Moxinet.InvalidReferenceError` | `x-moxinet-ref` header contained an unrecognised value |
+| `Moxinet.UnusedExpectationsError` | Test ended with expectations that were never called |
+
+## Using non-`req` HTTP clients
+
+Without `req`, the `x-moxinet-ref` header must be added manually. Without it, Moxinet cannot match incoming requests to test processes.
+
+Use `Moxinet.build_mock_header/0` to get the header tuple. Only include it in the test environment:
 
 ```elixir
 defmodule GithubAPI do
@@ -144,12 +209,36 @@ defmodule GithubAPI do
 end
 ```
 
-## Why not use `mox` instead?
-When testing calls to external servers `mox` tends to guide the user towards
-replacing the whole HTTP layer which is usually fine when the code is controlled
-by an external library, holding the responsibility of correctness on its own.
+## Static fallbacks and plug composition
 
-A commonly seen pattern where behaviors play the centric role like the following:
+Mock modules are Plugs — extend them like any other.
+
+Define static routes alongside dynamic expectations. Static routes match after dynamic expectations, so use them for responses that never vary across tests:
+
+```elixir
+defmodule GithubMock do
+  use Moxinet.Mock
+
+  get "/pull-requests/closed" do
+    send_resp(conn, 200, Jason.encode!([%{id: "1", closed: true}]))
+  end
+end
+```
+
+Compose with other plugs for shared verification logic:
+
+```elixir
+defmodule GithubMock do
+  use Moxinet.Mock
+
+  import Plug.BasicAuth
+  plug :basic_auth, username: "user", password: "s3cr3t"
+end
+```
+
+## Why not `mox`?
+
+When testing external HTTP calls, `mox` guides you towards replacing the entire HTTP layer. A common pattern:
 
 ```elixir
 defmodule GithubAPI do
@@ -172,22 +261,18 @@ defmodule GithubAPI do
 end
 ```
 
-will absolutely do the job, but there are a few drawbacks:
+This works, but has drawbacks:
 
-1. The `HTTP` remains untested as that is not being used by the test suite
-2. HTTP client libraries (like tesla) usually allow defining headers, authentication,
-   and in most cases also encodes passed data structures to JSON, where custom behavior
-   that filters/encodes data in certain ways can be included. I've seen cases where a
-   `@derive {Jason, only: [...]}` caused a bug that wasn't a bug according to all tests
-   that verified the expected data was sent to the HTTP layer.
+1. The `HTTP` module remains untested — the test suite never exercises it
+2. HTTP client libraries (like Tesla) handle headers, authentication, and JSON encoding. Custom encoding logic can hide bugs — a `@derive {Jason, only: [...]}` can cause a production bug that all tests miss because they verify data sent to the HTTP layer, not the wire
 
-`moxinet` aims to fill those gaps while also reducing the need for behaviors and mocks
-
+Moxinet fills those gaps while reducing the need for behaviours and mocks.
 
 ## How it works
-`Moxinet` works a lot similar to `mox` except it'll focus on solving the same issue for HTTP request.
 
-The test pid will be registered in the mock registry, where it can later be accessed from inside the mock.
+Moxinet works like `mox`, but for HTTP requests.
+
+The test pid is registered in the mock registry. When a request arrives, the mock looks up the pid to find the matching expectation.
 
 ```mermaid
 flowchart TD
