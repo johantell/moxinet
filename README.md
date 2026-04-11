@@ -59,7 +59,7 @@ ExUnit.start()
 
 ### 4. Configure your API urls
 
-Point your API at the mock server in the test environment:
+Point API urls at the mock server in the test environment:
 
 ```elixir
 # config/config.exs
@@ -73,7 +73,7 @@ config :my_app, GithubAPI,
 
 ### 5. Configure the `req` adapter (recommended)
 
-When using the `req` library, configure it to use `Moxinet.Adapters.ReqTestAdapter` in your `test.exs` file. This automatically injects the `x-moxinet-ref` header into all requests, so no manual header management is needed:
+With `req`, configure the adapter in `test.exs`. This automatically injects the `x-moxinet-ref` header into all requests — no manual header management needed:
 
 ```elixir
 # config/test.exs
@@ -142,7 +142,7 @@ Callbacks can be 1-arity (receives the request body) or 2-arity (receives the re
 
 ### `allow/2`
 
-By default, `$callers` propagation covers `Task` and most OTP processes automatically. For processes spawned with `spawn/1` or similar, explicitly grant access:
+`$callers` propagation covers `Task` and most OTP processes automatically. For plain `spawn/1`, explicitly grant access:
 
 ```elixir
 test "spawned process uses parent mocks" do
@@ -161,9 +161,9 @@ end
 
 ### `verify_usage!`
 
-All expectations must be consumed by the end of each test — unused expectations raise `Moxinet.UnusedExpectationsError`. This is checked automatically via an `on_exit` callback registered by `expect/4`.
+Unused expectations raise `Moxinet.UnusedExpectationsError` at the end of each test. This is checked automatically via an `on_exit` callback registered by `expect/4`.
 
-You can also verify explicitly:
+To verify explicitly:
 
 ```elixir
 setup :verify_usage!
@@ -180,9 +180,9 @@ setup :verify_usage!
 
 ## Using non-`req` HTTP clients
 
-When not using `req`, you must manually include the `x-moxinet-ref` header in your requests. Without it, Moxinet cannot match incoming requests to test processes.
+Without `req`, the `x-moxinet-ref` header must be added manually. Without it, Moxinet cannot match incoming requests to test processes.
 
-Use `Moxinet.build_mock_header/0` to get the header tuple. Only include this header in the test environment:
+Use `Moxinet.build_mock_header/0` to get the header tuple. Only include it in the test environment:
 
 ```elixir
 defmodule GithubAPI do
@@ -211,9 +211,9 @@ end
 
 ## Static fallbacks and plug composition
 
-The mock server is a Plug, so you can extend it like any other Plug.
+Mock modules are Plugs — extend them like any other.
 
-Define static catch-all routes alongside dynamic expectations. Static routes are matched after dynamic expectations — use this for responses that never vary across tests:
+Define static routes alongside dynamic expectations. Static routes match after dynamic expectations, so use them for responses that never vary across tests:
 
 ```elixir
 defmodule GithubMock do
@@ -238,7 +238,7 @@ end
 
 ## Why not `mox`?
 
-When testing calls to external servers, `mox` tends to guide you towards replacing the entire HTTP layer. A common pattern:
+When testing external HTTP calls, `mox` guides you towards replacing the entire HTTP layer. A common pattern:
 
 ```elixir
 defmodule GithubAPI do
@@ -263,16 +263,16 @@ end
 
 This works, but has drawbacks:
 
-1. The `HTTP` module remains untested since the test suite never exercises it
-2. HTTP client libraries (like Tesla) define headers, authentication, and JSON encoding — custom behavior that filters or encodes data can hide bugs. A `@derive {Jason, only: [...]}` can cause a bug that all tests miss because they verify data sent to the HTTP layer, not the wire
+1. The `HTTP` module remains untested — the test suite never exercises it
+2. HTTP client libraries (like Tesla) handle headers, authentication, and JSON encoding. Custom encoding logic can hide bugs — a `@derive {Jason, only: [...]}` can cause a production bug that all tests miss because they verify data sent to the HTTP layer, not the wire
 
-Moxinet fills those gaps while also reducing the need for behaviours and mocks.
+Moxinet fills those gaps while reducing the need for behaviours and mocks.
 
 ## How it works
 
-Moxinet works very similarly to `mox` except it focuses on HTTP requests.
+Moxinet works like `mox`, but for HTTP requests.
 
-The test pid is registered in the mock registry, where it can later be accessed from inside the mock.
+The test pid is registered in the mock registry. When a request arrives, the mock looks up the pid to find the matching expectation.
 
 ```mermaid
 flowchart TD
