@@ -15,7 +15,10 @@ defmodule Moxinet.MixProject do
       aliases: aliases(),
       docs: [
         main: "readme",
-        extras: ["README.md"],
+        extras: ["README.md", "guides/getting-started.md"],
+        groups_for_extras: [
+          Guides: ~r/guides\/.*/
+        ],
         before_closing_head_tag: &before_closing_head_tag/1
       ],
       package: [
