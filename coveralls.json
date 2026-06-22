@@ -1,0 +1,6 @@
+{
+  "skip_modules": [
+    "Moxinet.FakeRouter",
+    "Moxinet.FakeRouter.FakeMock"
+  ]
+}
