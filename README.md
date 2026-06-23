@@ -1,6 +1,7 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/johantell/moxinet/.github%2Fworkflows%2Felixir.yml)
 ![Hex.pm Version](https://img.shields.io/hexpm/v/moxinet)
 ![Hex.pm License](https://img.shields.io/hexpm/l/moxinet)
+[![Coverage Status](https://coveralls.io/repos/github/johantell/moxinet/badge.svg?branch=main)](https://coveralls.io/github/johantell/moxinet?branch=main)
 
 # Moxinet
 

@@ -28,12 +28,7 @@ defmodule Moxinet.MixProject do
       dialyzer: [
         plt_add_apps: [:ex_unit]
       ],
-      test_coverage: [
-        ignore_modules: [
-          Moxinet.FakeRouter,
-          Moxinet.FakeRouter.FakeMock
-        ]
-      ]
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -56,7 +51,8 @@ defmodule Moxinet.MixProject do
       {:dialyxir, "~> 1.4.3", only: :dev, runtime: false},
       {:req, "~> 0.5", optional: true},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:usage_rules, "~> 1.2", only: :dev}
+      {:usage_rules, "~> 1.2", only: :dev},
+      {:excoveralls, "~> 0.18", only: :test}
     ]
   end
 
@@ -108,8 +104,13 @@ defmodule Moxinet.MixProject do
 
   def cli do
     [
-      preferred_cli_env: [
-        "test.watch": :test
+      preferred_envs: [
+        "test.watch": :test,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test,
+        "coveralls.github": :test
       ]
     ]
   end

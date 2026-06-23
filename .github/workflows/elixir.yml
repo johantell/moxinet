@@ -41,7 +41,9 @@ jobs:
       run: mix deps.get
       
     - name: Run tests
-      run: mix test
+      run: mix coveralls.github
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Run credo
       run: mix credo
