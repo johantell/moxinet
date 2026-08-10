@@ -3,8 +3,6 @@ defmodule Moxinet.Application do
 
   alias Moxinet.SignatureStorage
 
-  require Logger
-
   @http_server Application.compile_env(:moxinet, :http_server, Bandit)
 
   @spec start(Keyword.t()) :: {:ok, pid()}
