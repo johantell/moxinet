@@ -8,17 +8,17 @@ if Code.ensure_loaded?(Req) do
     alias Req.Response
 
     @doc """
-    Puts the moxinet header onto the req request and continues with `Req.Steps.run_finch/1` which is the normal
+    Puts the moxinet header onto the req request and continues with `Req.Finch.run/1` which is the normal
     default adapter.
     """
-    @spec run(Request.t()) :: Response.t()
+    @spec run(Request.t()) :: {Request.t(), Response.t() | Exception.t()}
     def run(%Request{} = request) do
       {header_name, header_value} = Moxinet.build_mock_header()
 
       request
       |> Request.put_new_header(header_name, header_value)
       |> Request.append_response_steps(capture_moxinet_errors: &capture_moxinet_errors/1)
-      |> Req.Steps.run_finch()
+      |> Req.Finch.run()
     end
 
     @doc false

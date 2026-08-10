@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+Require `req ~> 0.7` for the optional `req` integration.
+
+- Bump the `req` requirement to `~> 0.7`, which replaced the `run_finch` step
+  with the `Req.Finch` adapter module
+- Update `Moxinet.Adapters.ReqTestAdapter` to call `Req.Finch.run/1`
+
+Upgrade guide for `req` users:
+
+`req` 0.7 deprecated configuring `adapter` as a function. Configure it as a
+module instead:
+
+```elixir
+# config/test.exs
+config :req, default_options: [
+  adapter: Moxinet.Adapters.ReqTestAdapter
+]
+```
+
 ## 0.7.0
 
 Small release to improve ownership tracking

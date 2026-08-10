@@ -79,7 +79,7 @@ With `req`, configure the adapter in `test.exs`. This automatically injects the 
 ```elixir
 # config/test.exs
 config :req, default_options: [
-  adapter: &Moxinet.Adapters.ReqTestAdapter.run/1
+  adapter: Moxinet.Adapters.ReqTestAdapter
 ]
 ```
 
