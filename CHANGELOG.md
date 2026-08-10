@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0
 
 Require `req ~> 0.7` for the optional `req` integration.
 

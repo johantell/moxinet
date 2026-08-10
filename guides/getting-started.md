@@ -14,7 +14,7 @@ Add it to your test dependencies:
 # mix.exs
 defp deps do
   [
-    {:moxinet, "~> 0.7.0", only: :test}
+    {:moxinet, "~> 0.8.0", only: :test}
   ]
 end
 ```
