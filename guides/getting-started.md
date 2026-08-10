@@ -110,7 +110,7 @@ This is the recommended approach. It automatically injects the `x-moxinet-ref` h
 # config/test.exs
 
 config :req, default_options: [
-  adapter: &Moxinet.Adapters.ReqTestAdapter.run/1
+  adapter: Moxinet.Adapters.ReqTestAdapter
 ]
 ```
 

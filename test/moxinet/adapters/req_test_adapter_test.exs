@@ -38,7 +38,7 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
 
       request =
         Req.new(
-          adapter: &ReqTestAdapter.run/1,
+          adapter: ReqTestAdapter,
           base_url: "http://0.0.0.0:4568/external_service/mocked_path",
           method: :get,
           retry: false
@@ -57,7 +57,7 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
   test "raises a moxinet error on a missing mock" do
     request =
       Req.new(
-        adapter: &ReqTestAdapter.run/1,
+        adapter: ReqTestAdapter,
         base_url: "http://0.0.0.0:4568/external_service/mocked_path",
         method: :get,
         retry: false
@@ -73,7 +73,7 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
 
     request =
       Req.new(
-        adapter: &ReqTestAdapter.run/1,
+        adapter: ReqTestAdapter,
         base_url: "http://0.0.0.0:4568/external_service/mocked_path",
         method: :get,
         retry: false
@@ -93,7 +93,7 @@ defmodule Moxinet.Adapters.ReqTestAdapterTest do
 
     request =
       Req.new(
-        adapter: &ReqTestAdapter.run/1,
+        adapter: ReqTestAdapter,
         base_url: "http://0.0.0.0:4568/external_service/mocked_path",
         method: :get,
         retry: false

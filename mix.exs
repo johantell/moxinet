@@ -49,7 +49,7 @@ defmodule Moxinet.MixProject do
       {:ex_doc, ">= 0.37.0", only: :dev, runtime: false},
       {:credo, "~> 1.7.5", only: :dev, runtime: false},
       {:dialyxir, "~> 1.4.3", only: :dev, runtime: false},
-      {:req, "~> 0.5", optional: true},
+      {:req, "~> 0.7", optional: true},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:usage_rules, "~> 1.2", only: :dev},
       {:excoveralls, "~> 0.18", only: :test}
