@@ -83,7 +83,7 @@ defmodule Moxinet.Plug.MockedResponse do
 
     response =
       callback
-      |> run_callback(body, request_headers)
+      |> run_callback(body, request_headers, conn)
       |> validate_response!()
 
     conn
@@ -100,14 +100,20 @@ defmodule Moxinet.Plug.MockedResponse do
     end
   end
 
-  defp run_callback(callback, body, _request_headers) when is_function(callback, 1) do
+  defp run_callback(callback, body, _request_headers, _conn) when is_function(callback, 1) do
     callback.(body)
   end
 
-  defp run_callback(callback, body, request_headers) when is_function(callback, 2) do
+  defp run_callback(callback, body, request_headers, _conn) when is_function(callback, 2) do
     request_headers = Enum.reject(request_headers, &moxinet_header?/1)
 
     callback.(body, request_headers)
+  end
+
+  defp run_callback(callback, body, request_headers, conn) when is_function(callback, 3) do
+    request_headers = Enum.reject(request_headers, &moxinet_header?/1)
+
+    callback.(body, request_headers, conn)
   end
 
   defp moxinet_header?({"x-moxinet-ref", _}), do: true

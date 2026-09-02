@@ -151,6 +151,25 @@ defmodule Moxinet.Plug.MockedResponseTest do
                       [{"accept", "application/json"}, {"x-special-header", "something"}]}
     end
 
+    test "passes the `%Plug.Conn{}` when called with an arity of 3" do
+      test_pid = self()
+
+      conn =
+        conn(:post, "/path", "")
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+        |> put_req_header("x-special-header", "something")
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload, _headers, conn ->
+        send(test_pid, {:conn, conn})
+        %Response{status: 200}
+      end)
+
+      MockedResponse.call(conn, @opts)
+
+      assert_receive {:conn, %Plug.Conn{}}
+    end
+
     test "raises when callback returns something else than a `%Response{}`" do
       conn =
         put_req_header(
