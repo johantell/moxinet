@@ -7,6 +7,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
   alias Moxinet.Plug.MockedResponse
   alias Moxinet.Response
   alias Moxinet.SignatureStorage
+  alias Moxinet.StreamResponse
 
   @opts MockedResponse.init(scope: CustomAPIMock)
 
@@ -170,6 +171,53 @@ defmodule Moxinet.Plug.MockedResponseTest do
       assert_receive {:conn, %Plug.Conn{}}
     end
 
+    test "allows sending chunked/streamed responses" do
+      conn =
+        conn(:post, "/path", "")
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+        |> put_req_header("x-special-header", "something")
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload, _headers, conn ->
+        conn
+        |> StreamResponse.new()
+        |> StreamResponse.send_chunk(JSON.encode!(%{number: 1}))
+        |> StreamResponse.send_chunk(JSON.encode!(%{number: 2}))
+      end)
+
+      assert %Plug.Conn{
+               state: :chunked,
+               status: 200,
+               resp_body: ~s({"number":1}{"number":2})
+             } = MockedResponse.call(conn, @opts)
+    end
+
+    test "fails with an understandable message when failing mid-stream" do
+      conn =
+        conn(:post, "/path", "")
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("x-moxinet-ref", Moxinet.pid_reference(self()))
+        |> put_req_header("x-special-header", "something")
+
+      SignatureStorage.store(CustomAPIMock, :post, "/path", fn _payload, _headers, conn ->
+        stream_response = StreamResponse.new(conn)
+        StreamResponse.send_chunk(stream_response, "1")
+
+        raise "failed!"
+
+        StreamResponse.send_chunk(stream_response, "2")
+      end)
+
+      assert_raise RuntimeError, "failed!", fn ->
+        MockedResponse.call(conn, @opts)
+      end
+
+      assert_receive {:plug_conn, :sent}
+
+      # We expect exactly 1 chunk before the failure. After that, no more should be received
+      refute_receive {:plug_conn, :sent}
+    end
+
     test "raises when callback returns something else than a `%Response{}`" do
       conn =
         put_req_header(
@@ -183,7 +231,7 @@ defmodule Moxinet.Plug.MockedResponseTest do
       end)
 
       assert_raise ArgumentError,
-                   "Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `%{status: 200}`",
+                   "Expected mock callback to respond with a `%Moxinet.Response{}` or `%Moxinet.StreamResponse{}` struct, got: `%{status: 200}`",
                    fn ->
                      MockedResponse.call(conn, @opts)
                    end

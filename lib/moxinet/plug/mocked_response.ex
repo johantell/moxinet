@@ -7,6 +7,7 @@ defmodule Moxinet.Plug.MockedResponse do
   alias Moxinet.InvalidReferenceError
   alias Moxinet.MissingMockError
   alias Moxinet.Response
+  alias Moxinet.StreamResponse
   alias Moxinet.SignatureStorage
 
   @type plug_options :: Keyword.t()
@@ -30,8 +31,6 @@ defmodule Moxinet.Plug.MockedResponse do
            ) do
       conn
       |> apply_signature(mock_function)
-      |> send_resp()
-      |> halt()
     else
       {:error, :missing_pid_reference} ->
         fail_and_send(conn, build_error(InvalidReferenceError, conn))
@@ -86,10 +85,7 @@ defmodule Moxinet.Plug.MockedResponse do
       |> run_callback(body, request_headers, conn)
       |> validate_response!()
 
-    conn
-    |> put_response_status(response)
-    |> put_response_headers(response)
-    |> put_response_body(response)
+    process_response(conn, response)
   end
 
   defp decode_decodable_body(%Plug.Conn{} = conn, body) do
@@ -119,13 +115,29 @@ defmodule Moxinet.Plug.MockedResponse do
   defp moxinet_header?({"x-moxinet-ref", _}), do: true
   defp moxinet_header?(_), do: false
 
-  defp validate_response!(response) when is_struct(response, Response), do: response
+  defp validate_response!(%struct{} = response) when struct in [Response, StreamResponse],
+    do: response
 
   defp validate_response!(invalid_response) do
     raise ArgumentError,
           String.trim("""
-            Expected mock callback to respond with a `%Moxinet.Response{}` struct, got: `#{inspect(invalid_response)}`
+            Expected mock callback to respond with a `%Moxinet.Response{}` or `%Moxinet.StreamResponse{}` struct, got: `#{inspect(invalid_response)}`
           """)
+  end
+
+  defp process_response(%Plug.Conn{} = conn, %Response{} = response) do
+    conn
+    |> put_response_status(response)
+    |> put_response_headers(response)
+    |> put_response_body(response)
+    |> send_resp()
+    |> halt()
+  end
+
+  # Completing a streamed/chunked response is done automatically in the plug pipeline during a halt
+  defp process_response(%Plug.Conn{}, %StreamResponse{conn: conn}) do
+    conn
+    |> halt()
   end
 
   defp put_response_status(%Plug.Conn{} = conn, %Response{status: status}) do
